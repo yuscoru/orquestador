@@ -106,6 +106,39 @@ the global one remains authoritative for **scope and numbering**.
 
 ---
 
+# Approval gates
+
+Four human decision points govern a feature. The first three belong to the
+`captain`, the fourth to the `admiral`.
+
+```text
+GATE 1  spec       captain    after /speckit.specify
+GATE 2  plan       captain    after /speckit.plan
+GATE 3  tasks      captain    after /speckit.tasks, before handoff.md
+GATE 4  delivery   admiral    before push, PR or deploy
+```
+
+All gates live in this repository. Product repositories have none; their
+engineers run only `/speckit.implement`, which has no native gate.
+
+An approval recorded only in chat did not happen. Gates 1 to 3 are recorded in
+the artifact they approve:
+
+```markdown
+> Gate: approved by user on 2026-10-14.
+```
+
+Gate 4 is recorded in `WORKFLOW-STATE.md` under
+`delivery_authorizations_granted`.
+
+An artifact without its gate record is a **draft**. The `admiral` MUST NOT
+issue envelopes from a draft.
+
+Gates cannot be executed inside a subagent: a subagent runs to completion and
+the user cannot reply to it mid-run. Gated stages are user-driven sessions.
+
+---
+
 # Materialization
 
 `/speckit.implement` runs `check-prerequisites.sh --require-tasks`, which
