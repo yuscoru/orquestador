@@ -51,6 +51,9 @@ feature:
   ado_user_story: 812
   slug: new-capability
 
+source:
+  artifacts: /root/soarplus-dev-orchestration/specs/812-new-capability
+
 assignment:
   ado_task: 934
   spec_tasks:
@@ -150,6 +153,38 @@ the mismatch rather than rename or recreate artifacts automatically.
 
 ---
 
+# Source
+
+## `source.artifacts`
+
+Absolute path to the feature's **global** artifacts in the orchestration
+repository.
+
+```yaml
+source:
+  artifacts: /root/soarplus-dev-orchestration/specs/812-new-capability
+```
+
+That directory contains the authoritative `spec.md`, `plan.md` and `tasks.md`
+for the whole feature.
+
+This field is **required**. The worker projects its repository-local
+`spec.md`, `plan.md` and `tasks.md` from those files, as defined in
+`workflow-state.md`. Without them `/speckit.implement` cannot run, because
+`check-prerequisites.sh --require-tasks` aborts when they are missing.
+
+The worker MUST read the path from this field and MUST NOT derive it from the
+feature identity. Deriving a path is how a worker ends up projecting from the
+wrong feature.
+
+The path is **read-only** to the worker. Reading it is explicitly permitted
+despite the orchestration repository being otherwise off limits.
+
+If the path does not exist or does not contain the three files, stop and return
+a blocker. Do not invent a local plan to proceed.
+
+---
+
 # Assignment
 
 ## `assignment.ado_task`
@@ -167,7 +202,6 @@ The worker MUST NOT close or update unrelated Tasks.
 ---
 
 ## `assignment.spec_tasks`
-
 Repository-local Spec Kit tasks covered by the assignment.
 
 Example:
@@ -180,6 +214,10 @@ spec_tasks:
 
 This field MAY contain multiple local tasks when one ADO Task intentionally
 groups them.
+
+These ids come from the **global** `tasks.md` under `source.artifacts`. The
+worker's projected `tasks.md` MUST keep them unchanged. Renumbering breaks the
+thread between this field, the repository's tasks and the commit trailer.
 
 The worker MUST NOT opportunistically complete unrelated Spec Kit tasks.
 

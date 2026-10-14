@@ -120,8 +120,13 @@ Repositories currently available in this environment:
 /root/soarplus-runner            read-only context
 /root/soarplus-kubernetes        read-only context
 /root/soarplus-development-agents read-only context
-/root/soarplus-dev-orchestration protocols only, never modified
+/root/soarplus-dev-orchestration protocols + global feature artifacts, read-only
 ```
+
+You MAY read `protocols/` and the feature's global `specs/<ADO-US>-<slug>/` in
+the orchestration repository. The envelope's `source.artifacts` points at the
+latter, and you need it to project your local spec, plan and tasks. You still
+MUST NOT write anything there.
 
 Do not assume this list is complete or current. Verify the paths that a given
 task actually needs.
@@ -287,7 +292,10 @@ export SPECIFY_FEATURE_DIRECTORY="specs/<ADO-US>-<slug>"
 /speckit.git.feature            or: git checkout -b <repository.branch>
 mkdir -p specs/<ADO-US>-<slug>/
 write .specify/feature.json     {"feature_directory": "specs/<ADO-US>-<slug>"}
-project spec.md, plan.md, tasks.md from the global artifacts
+
+read  <source.artifacts>/spec.md  plan.md  tasks.md     from the envelope
+write specs/<ADO-US>-<slug>/spec.md  plan.md  tasks.md  projected
+
 /speckit.implement
 ```
 

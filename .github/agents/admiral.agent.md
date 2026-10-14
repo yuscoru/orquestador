@@ -233,6 +233,9 @@ feature:
   ado_user_story:
   slug:
 
+source:
+  artifacts:
+
 assignment:
   ado_task:
   spec_tasks: []
@@ -274,6 +277,23 @@ is your bug to fix, not theirs.
 `repository.branch` MUST be stated explicitly as `feature/<ADO-US>-<slug>`,
 identical across every repository in the feature. The engineer materializes it;
 it never derives it.
+
+`source.artifacts` MUST point at the feature's global artifacts in this
+repository:
+
+```yaml
+source:
+  artifacts: /root/soarplus-dev-orchestration/specs/<ADO-US>-<slug>
+```
+
+The engineer projects its local `spec.md`, `plan.md` and `tasks.md` from that
+directory. Without the field it would have to guess the path, and without those
+files `/speckit.implement` aborts. An envelope missing `source.artifacts` is
+incomplete.
+
+Before issuing it, confirm the three global files actually exist there. Sending
+a worker to project from an empty directory wastes a round trip and produces a
+blocker you caused.
 
 The first envelope a repository receives for a feature also authorizes
 materialization of its local `specs/<ADO-US>-<slug>/`, without which
