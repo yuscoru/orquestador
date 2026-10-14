@@ -269,15 +269,17 @@ You choose the slug **once**, when the global specification is created. Every
 repository reuses it verbatim, in its branch and its spec directory, per
 `protocols/feature-branching.md`.
 
-Before running any Spec Kit command that creates a branch in this repository,
-export the exact branch name:
+Before running any Spec Kit command in this repository, export both variables:
 
 ```bash
 export GIT_BRANCH_NAME="feature/<ADO-US>-<slug>"
+export SPECIFY_FEATURE_DIRECTORY="specs/<ADO-US>-<slug>"
 ```
 
-Otherwise `/speckit.specify` auto-creates a sequentially numbered branch and
-breaks the cross-repository convention.
+They control different things and both are required: the first names the
+branch, the second names the spec directory. Without the first,
+`/speckit.specify` auto-creates a sequentially numbered branch and breaks the
+cross-repository convention. See `protocols/feature-branching.md`.
 
 Do not invent or silently substitute work-item identifiers.
 
@@ -336,6 +338,32 @@ deployment dependency
 Do not collapse them into one generic `depends_on` relationship when they have
 different semantics. A merge dependency and a design dependency imply very
 different execution orders.
+
+## Per-repository sections
+
+The plan MUST contain one section per affected repository. That section is
+**projected verbatim into that repository's local `plan.md`** during
+materialization, so it must stand alone as that repository's technical plan.
+
+Each section states approach, constraints, contracts consumed and provided, and
+validation expectations.
+
+This is the one place where repository-level technical depth belongs in your
+artifacts. Obtain it from the `-analyst` workers, not from assumption — that is
+why analysts exist.
+
+It is still not code. Define the approach and the boundaries; leave mechanics to
+the engineer. An engineer that finds the approach unworkable returns a blocker
+to you, and you revise the plan.
+
+## Task tagging
+
+Every task in the global `tasks.md` MUST name the worker that will execute it.
+
+Task ids are the cross-repository thread: the same id appears in the global
+tasks, in the envelope's `spec_tasks`, in the repository's projected `tasks.md`
+and in the commit trailer. Numbering is assigned once, here, and never
+reassigned downstream.
 
 ---
 

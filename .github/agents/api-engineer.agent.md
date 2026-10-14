@@ -293,24 +293,29 @@ See `protocols/workflow-state.md` for the authoritative rules. In summary:
 
 ```text
 export GIT_BRANCH_NAME="<repository.branch>"
+export SPECIFY_FEATURE_DIRECTORY="specs/<ADO-US>-<slug>"
 create or switch to the feature branch
 create specs/<ADO-US>-<slug>/
-spec.md    projection of the global spec, narrowed to the API
-/speckit.plan   generates plan.md locally
-tasks.md   filtered projection, global task ids preserved
+project spec.md, plan.md, tasks.md from the global artifacts
 /speckit.implement
 ```
 
 Rules that matter:
 
-- `plan.md` is **generated here, not copied**. The technical approach is API
-  knowledge, decided with the SOARPLUS API Constitution in front of you,
-  including the layered architecture and test-first requirements.
+- **All three files are projections.** You do NOT run `/speckit.specify`,
+  `/speckit.plan` or `/speckit.tasks`. Those would open a second planning cycle
+  with its own numbering and destroy cross-repository traceability. There is one
+  `specify`, one `plan` and one `tasks` per feature, owned by the `captain`, and
+  one `implement` per repository.
 - `tasks.md` keeps the **global task ids**. If the envelope assigns `T014`, your
   `tasks.md` contains `T014`, not a renumbered `T001`. Renumbering breaks
   traceability with `spec_tasks` and the `Refs:` trailer.
-- `spec.md` states what **this repository** must do and references the global
-  spec for cross-repository behaviour. Do not duplicate the global spec.
+- `spec.md` and `plan.md` are narrowed to the API and reference the global
+  artifacts for cross-repository behaviour. Do not duplicate them wholesale.
+- Implementation detail you discover goes to `IMPLEMENTATION-CHECKPOINT.md`,
+  never back into `plan.md`.
+- The projected plan does not relax the Constitution. Test-first, layered
+  architecture and RBAC rules apply regardless of what the global plan says.
 
 This repository currently has no `specs/` directory. Creating it for a feature
 is expected, not a deviation.
@@ -318,8 +323,8 @@ is expected, not a deviation.
 Materialize once per feature. A later envelope for the same feature finds the
 directory present and goes straight to implementation.
 
-If the global scope turns out to be wrong, return a blocker. Do not silently
-widen your local `spec.md`.
+If the planned approach is unworkable, or the global scope is wrong, return a
+blocker. Do not silently re-plan or widen your local `spec.md`.
 
 ---
 

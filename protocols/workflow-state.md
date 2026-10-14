@@ -129,22 +129,46 @@ Not the `admiral`: it issues envelopes, it does not write product repositories.
 
 In the product repository, at `specs/<ADO-US>-<slug>/`:
 
-| File | Origin | Why |
-|---|---|---|
-| `spec.md` | projection of the global `spec.md` | global scope is authoritative |
-| `tasks.md` | filtered projection, ids preserved | global numbering is authoritative |
-| `plan.md` | generated locally with `/speckit.plan` | the technical approach is repository-local knowledge |
+| File | Origin |
+|---|---|
+| `spec.md` | projection of the global `spec.md`, narrowed to this repository |
+| `plan.md` | projection of this repository's section of the global `plan.md` |
+| `tasks.md` | filtered projection of the global `tasks.md`, ids preserved |
 
-`plan.md` is **generated, not copied**. The `captain` defines outcome and
-constraints, never implementation mechanics. The repository decides how, with
-its own constitution and scoped instructions in front of it.
+**All three are projections. None is regenerated.**
 
-`spec.md` is narrowed, not duplicated: it states what **this repository** must
-do, referencing the global spec for cross-repository behaviour.
+The repository worker does **not** run `/speckit.specify`, `/speckit.plan` or
+`/speckit.tasks`. Those commands would start a second planning cycle with its
+own numbering, and cross-repository traceability would be lost.
 
-`tasks.md` contains only the tasks assigned to this repository, keeping their
-global ids. Renumbering breaks traceability between `spec_tasks` in the
-envelope, the repository's tasks and the commit trailer.
+There is exactly one `specify`, one `plan` and one `tasks` per feature — in this
+repository, by the `captain` — and one `implement` per product repository.
+
+```text
+1 specify  +  1 plan  +  1 tasks   global, orchestration
+N implement                        one per product repository
+```
+
+Task ids are the thread: the same `T014` appears in the global `tasks.md`, in
+`spec_tasks` of the envelope, in the repository's `tasks.md` and in the commit
+trailer. Renumbering anywhere cuts the thread.
+
+## Where repository depth comes from
+
+The global `plan.md` carries a per-repository section detailing approach,
+constraints, contracts and validation expectations. That section is what gets
+projected.
+
+Its technical depth comes from the `-analyst` workers in `ANALYZE` mode. That is
+why analysts exist: so the `captain` can plan with repository evidence without
+either guessing or writing in the repository.
+
+Implementation detail discovered **during** implementation does not go back into
+`plan.md`. It goes into the repository's `IMPLEMENTATION-CHECKPOINT.md`, which
+every product repository already defines as its current-reality artifact.
+
+If the planned approach turns out to be unworkable, that is a blocker for the
+`captain`, not a local rewrite.
 
 ## Sequence
 
@@ -152,7 +176,8 @@ envelope, the repository's tasks and the commit trailer.
 Task Envelope received
       |
       v
-export GIT_BRANCH_NAME="<repository.branch>"   feature-branching.md
+export GIT_BRANCH_NAME="<repository.branch>"
+export SPECIFY_FEATURE_DIRECTORY="specs/<ADO-US>-<slug>"
       |
       v
 create or switch to the feature branch
@@ -161,16 +186,10 @@ create or switch to the feature branch
 create specs/<ADO-US>-<slug>/
       |
       v
-write spec.md      projection of the global spec, narrowed to this repository
+project spec.md, plan.md, tasks.md from the global artifacts
       |
       v
-/speckit.plan      generates plan.md from the local spec and constitution
-      |
-      v
-write tasks.md     filtered projection, global ids preserved
-      |
-      v
-/speckit.implement now that prerequisites exist
+/speckit.implement      prerequisites now satisfied
 ```
 
 Materialization happens **once per feature per repository**. A later envelope

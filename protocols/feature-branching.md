@@ -53,17 +53,44 @@ its own slug from the feature description.
 
 # The mechanism
 
-`speckit.git.feature` runs `create-new-feature.sh`, which honours an environment
-override:
+Two **independent** environment variables control two independent things. Both
+are required. Setting only one produces a branch and a directory that disagree.
 
 ```bash
 export GIT_BRANCH_NAME="feature/696-sre-response-quality"
+export SPECIFY_FEATURE_DIRECTORY="specs/696-sre-response-quality"
 ```
 
-When set, the script uses that exact name and **bypasses all prefix and
-numbering generation**.
+| Variable | Controls | Read by |
+|---|---|---|
+| `GIT_BRANCH_NAME` | the branch name | `speckit.git.feature` extension script |
+| `SPECIFY_FEATURE_DIRECTORY` | the spec directory | `/speckit.specify`, and `get_feature_paths` for plan/tasks/implement |
 
-This MUST be exported before any command that creates a branch.
+The branch keeps the `feature/` prefix. The directory does not. They are
+deliberately different strings, which is why one variable cannot serve both.
+
+Verified behaviour, dry-run, no side effects:
+
+```text
+no variables        -> branch 001-sre-response-quality
+GIT_BRANCH_NAME set -> branch feature/696-sre-response-quality
+```
+
+`/speckit.specify` persists the resolved directory into
+`.specify/feature.json`, so later commands in that repository resolve it
+without the variable being re-exported.
+
+## Why both are needed
+
+`GIT_BRANCH_NAME` bypasses numbering but the extension then reports
+`FEATURE_NUM` as the **whole branch string**, because the extraction regex
+expects a leading digit and `feature/696-...` starts with a letter.
+
+Any code path that derives a directory from that value would produce the nested
+`specs/feature/696-sre-response-quality/`.
+
+`SPECIFY_FEATURE_DIRECTORY` removes the dependency entirely: the directory is
+stated, not derived.
 
 ## Why it must be exported first
 
@@ -94,8 +121,8 @@ already happened once in `soarplus-agentics`, where
 
 It exists only because this protocol imposes it through `GIT_BRANCH_NAME`.
 
-Do not look for a configuration file that enforces this. There is none. The
-export is the enforcement.
+Do not look for a configuration file that enforces this. There is none. The two
+exports are the enforcement.
 
 ---
 
@@ -118,13 +145,16 @@ expected branch in `repository.branch` of the Task Envelope.
 On receiving a Task Envelope, before any write:
 
 1. Read `repository.branch` from the envelope.
-2. If already on that branch, continue.
-3. If the branch exists locally, switch to it.
-4. If it does not exist, create it with the exact name from the envelope.
+2. Export both variables:
 
 ```bash
 export GIT_BRANCH_NAME="<repository.branch>"
+export SPECIFY_FEATURE_DIRECTORY="specs/<ADO-US>-<slug>"
 ```
+
+3. If already on that branch, continue.
+4. If the branch exists locally, switch to it.
+5. If it does not exist, create it with the exact name from the envelope.
 
 Never infer the branch name. Never let Spec Kit generate it.
 
@@ -142,11 +172,18 @@ orchestration defect. Return the blocker rather than normalizing it silently.
 
 # Spec directory binding
 
-Spec Kit resolves the active feature directory through `SPECIFY_FEATURE` or
-`.specify/feature.json`.
+Spec Kit resolves the active feature directory in this priority order:
 
-After creating or switching to the feature branch, confirm the active feature
-directory is:
+```text
+1. SPECIFY_FEATURE_DIRECTORY   explicit override
+2. .specify/feature.json       persisted by /speckit.specify
+3. branch-name prefix lookup   legacy fallback
+```
+
+The branch-name fallback is the one that would break the convention. Keep
+resolution at level 1 or 2.
+
+The active feature directory MUST be:
 
 ```text
 specs/<ADO-US>-<slug>/
