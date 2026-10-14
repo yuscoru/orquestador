@@ -294,11 +294,21 @@ See `protocols/workflow-state.md` for the authoritative rules. In summary:
 ```text
 export GIT_BRANCH_NAME="<repository.branch>"
 export SPECIFY_FEATURE_DIRECTORY="specs/<ADO-US>-<slug>"
-create or switch to the feature branch
-create specs/<ADO-US>-<slug>/
+
+/speckit.git.feature            or: git checkout -b <repository.branch>
+mkdir -p specs/<ADO-US>-<slug>/
+write .specify/feature.json     {"feature_directory": "specs/<ADO-US>-<slug>"}
 project spec.md, plan.md, tasks.md from the global artifacts
 /speckit.implement
 ```
+
+**Creating is not planning.** The branch, the directory and the three files are
+ordinary operations: a branch command, `mkdir`, and writing files. You do NOT
+need `/speckit.specify` to produce them.
+
+`/speckit.implement` does not care how the files arrived. It runs
+`check-prerequisites.sh --require-tasks`, which only checks that `plan.md` and
+`tasks.md` exist in the resolved feature directory.
 
 Rules that matter:
 
@@ -307,6 +317,8 @@ Rules that matter:
   with its own numbering and destroy cross-repository traceability. There is one
   `specify`, one `plan` and one `tasks` per feature, owned by the `captain`, and
   one `implement` per repository.
+- `.specify/feature.json` is tracked in this repository. Writing it is what makes
+  the feature binding survive the session; the environment variable does not.
 - `tasks.md` keeps the **global task ids**. If the envelope assigns `T014`, your
   `tasks.md` contains `T014`, not a renumbered `T001`. Renumbering breaks
   traceability with `spec_tasks` and the `Refs:` trailer.

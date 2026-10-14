@@ -125,6 +125,59 @@ scope, which is the central invariant of this system.
 
 Not the `admiral`: it issues envelopes, it does not write product repositories.
 
+## Creating is not planning
+
+The most common misreading of this protocol is to assume that creating the
+branch and the `specs/` directory requires `/speckit.specify`. It does not.
+
+These are separable operations:
+
+| Operation | Mechanism | Planning? |
+|---|---|---|
+| create the branch | `/speckit.git.feature`, or plain `git checkout -b` | no |
+| create `specs/<feature>/` and its files | `mkdir` and write | no |
+| bind the active feature | `.specify/feature.json` | no |
+| draft a spec from a description | `/speckit.specify` | **yes** |
+| derive a plan from the spec | `/speckit.plan` | **yes** |
+| derive tasks from the plan | `/speckit.tasks` | **yes** |
+| execute the tasks | `/speckit.implement` | no, execution |
+
+The engineer performs the first three and the last. Never the three marked as
+planning.
+
+`/speckit.git.feature` exists precisely for this: its own documentation states
+it "handles branch creation only — the spec directory and files are created by
+the core `/speckit.specify` workflow". Used standalone, with `GIT_BRANCH_NAME`
+exported, it creates the correctly named branch and nothing else.
+
+`/speckit.implement` does not know or care how the files arrived. It runs
+`check-prerequisites.sh --require-tasks`, which only checks that `plan.md` and
+`tasks.md` **exist** in the resolved feature directory. Files written by
+projection satisfy it exactly as generated ones would.
+
+## Binding the active feature
+
+`get_feature_paths` resolves the feature directory in this order:
+
+```text
+1. SPECIFY_FEATURE_DIRECTORY   environment variable, current shell only
+2. .specify/feature.json       committed file, survives the session
+3. branch-name prefix lookup   legacy fallback, breaks the convention
+```
+
+The environment variable dies with the shell. During materialization the
+engineer MUST also write:
+
+```json
+{"feature_directory": "specs/<ADO-US>-<slug>"}
+```
+
+to `.specify/feature.json`, which is a tracked file in these repositories. That
+is what makes the binding durable across sessions.
+
+Confirm the repository's own conventions before committing it; it changes the
+active feature for everyone working in that repository.
+
 ## What is produced
 
 In the product repository, at `specs/<ADO-US>-<slug>/`:
@@ -181,9 +234,12 @@ export SPECIFY_FEATURE_DIRECTORY="specs/<ADO-US>-<slug>"
       |
       v
 create or switch to the feature branch
+      |   /speckit.git.feature, or git checkout -b
+      v
+mkdir -p specs/<ADO-US>-<slug>/
       |
       v
-create specs/<ADO-US>-<slug>/
+write .specify/feature.json -> {"feature_directory": "specs/<ADO-US>-<slug>"}
       |
       v
 project spec.md, plan.md, tasks.md from the global artifacts
@@ -191,6 +247,10 @@ project spec.md, plan.md, tasks.md from the global artifacts
       v
 /speckit.implement      prerequisites now satisfied
 ```
+
+No planning command appears in this sequence. The branch, the directory and the
+three files are created by ordinary operations; only the final step is a Spec
+Kit command, and it is execution, not planning.
 
 Materialization happens **once per feature per repository**. A later envelope
 for the same feature finds the directory already present and skips to
