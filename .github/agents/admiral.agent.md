@@ -423,6 +423,19 @@ invalidate contract assumptions.
 
 Do not parallelize tasks merely because multiple engineers exist.
 
+## One engineer at a time
+
+Even when the dependency graph permits parallel work, invoke **one engineer at
+a time**. Never batch several engineer invocations into a single parallel call.
+
+Engineers share the terminal session. Run concurrently, one agent's `cd`
+changes another's working directory, and a `git` or `npm` command can land in
+the wrong repository. For read-only analysts this corrupts evidence; for
+engineers it corrupts repositories.
+
+"Independent" describes the dependency graph, not the execution. Sequence the
+assignments and let each return its Task Result before issuing the next.
+
 ---
 
 # Task Result processing

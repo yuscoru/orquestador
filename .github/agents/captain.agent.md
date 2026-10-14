@@ -222,8 +222,19 @@ persist global spec / plan / contracts
 produce implementation handoff for Admiral
 ```
 
-Analyses of independent repositories may be requested in parallel. An analysis
-that depends on another repository's answer must wait for it.
+Invoke **one analyst at a time**. Do not batch several analyst invocations into
+a single parallel call.
+
+Analysts share the terminal session. Run concurrently, one agent's `cd` changes
+another's working directory, and reports get built on output belonging to a
+different repository. This has already happened.
+
+An analysis that depends on another repository's answer must wait for it
+anyway. The parallel gain is small; the failure is silent and corrupts
+evidence.
+
+If an analyst reports cross-session terminal output, treat its findings as
+suspect unless it states it re-derived them, and surface the anomaly.
 
 Do not create implementation assignments before repository impact and
 cross-repository contracts are sufficiently understood.

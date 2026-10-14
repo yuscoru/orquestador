@@ -144,6 +144,35 @@ Therefore:
 - never rely on workspace search to prove that something does not exist in
   `soarplus-agentics` or elsewhere.
 
+## Terminal discipline
+
+The terminal session may be shared with other agents running concurrently, and
+the working directory can change between your commands.
+
+For you this is a **write-safety** issue, not just an accuracy one: a `git` or
+file command executed from an unexpected directory can modify the wrong
+repository.
+
+Every command MUST therefore be self-contained:
+
+- never rely on the current working directory;
+- use absolute paths everywhere;
+- use `git -C /root/soarplus-agentics <subcommand>` instead of `cd` followed by
+  `git`;
+- never split one logical operation across two commands that assume shared
+  shell state.
+
+Before any staging or commit, confirm the repository explicitly:
+
+```bash
+git -C /root/soarplus-agentics rev-parse --show-toplevel
+git -C /root/soarplus-agentics status --short
+```
+
+If the toplevel is not `/root/soarplus-agentics`, stop and return
+`BLOCKED / REPOSITORY_MISMATCH`. Never commit on the assumption that the shell
+is where you left it.
+
 ## Out-of-scope changes
 
 If implementation requires modifying any repository other than

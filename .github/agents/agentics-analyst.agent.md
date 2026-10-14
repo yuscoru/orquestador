@@ -147,6 +147,34 @@ Therefore:
   `soarplus-agentics` or elsewhere. If you could not search a path, report that
   limitation instead of concluding absence.
 
+## Terminal discipline
+
+The terminal session may be shared with other agents running concurrently. You
+can receive output belonging to a different session.
+
+Every command MUST therefore be self-contained:
+
+- never rely on the current working directory; another agent may have changed
+  it between your commands;
+- use absolute paths everywhere;
+- use `git -C /root/soarplus-agentics <subcommand>` instead of `cd` followed by
+  `git`;
+- never split one logical operation across two commands that assume shared
+  shell state.
+
+Echo a unique marker and verify it in the output:
+
+```bash
+echo "MARK-7f3a"; git -C /root/soarplus-agentics status --short; echo "END-7f3a"
+```
+
+If the marker is absent, or the output describes paths you did not ask about,
+discard it and re-run. Never base a finding on terminal output you could not
+attribute to your own command.
+
+Report the anomaly in your result. A shared terminal is an environment defect,
+not something to work around silently.
+
 ---
 
 # Supported mode
