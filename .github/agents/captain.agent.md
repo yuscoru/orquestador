@@ -265,6 +265,20 @@ Example:
 696-sre-response-quality
 ```
 
+You choose the slug **once**, when the global specification is created. Every
+repository reuses it verbatim, in its branch and its spec directory, per
+`protocols/feature-branching.md`.
+
+Before running any Spec Kit command that creates a branch in this repository,
+export the exact branch name:
+
+```bash
+export GIT_BRANCH_NAME="feature/<ADO-US>-<slug>"
+```
+
+Otherwise `/speckit.specify` auto-creates a sequentially numbered branch and
+breaks the cross-repository convention.
+
 Do not invent or silently substitute work-item identifiers.
 
 When repository state uses a different slug for the same User Story, report the
@@ -493,14 +507,19 @@ The layout and file ownership are defined by:
 protocols/workflow-state.md
 ```
 
-You own exactly these files, under `features/<ADO-US>-<slug>/`:
+You own exactly these files, under `specs/<ADO-US>-<slug>/`:
 
 ```
-global-spec.md     cross-repository behaviour and scope
-global-plan.md     architecture, dependencies, sequencing
-contracts.md       contract registry: references, never copies
-handoff.md         implementation-ready decomposition
+spec.md          GLOBAL spec, via /speckit.specify
+plan.md          GLOBAL plan, via /speckit.plan
+tasks.md         GLOBAL tasks, via /speckit.tasks, tagged by worker
+contracts.md     contract registry: references, never copies
+handoff.md       implementation-ready decomposition
 ```
+
+These are **global** artifacts describing the feature across repositories. They
+are not the same documents as a product repository's own `specs/<feature>/`,
+which describes only that repository's work.
 
 You MUST NOT write execution state. `WORKFLOW-STATE.md`, `log.md`,
 `envelopes/` and `results/` belong to the `admiral`.
@@ -531,7 +550,7 @@ When planning is complete, produce an implementation-ready handoff, persisted
 at:
 
 ```
-features/<ADO-US>-<slug>/handoff.md
+specs/<ADO-US>-<slug>/handoff.md
 ```
 
 containing:

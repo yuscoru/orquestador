@@ -94,6 +94,11 @@ You may reason about branch state but do not modify product repository Git
 state. Branch creation, switching, commit and push are performed by the
 assigned engineer, only when authorized.
 
+Every Task Envelope MUST state `repository.branch` as
+`feature/<ADO-US>-<slug>`, identical in every repository touched by the
+feature, per `protocols/feature-branching.md`. Never leave the engineer to
+derive it.
+
 Do not run deployment commands.
 
 ---
@@ -144,6 +149,7 @@ protocols/task-result.md
 protocols/blocker-result.md
 protocols/worker-registry.md
 protocols/workflow-state.md
+protocols/feature-branching.md
 ```
 
 The `captain` uses:
@@ -685,7 +691,7 @@ protocols/workflow-state.md
 ```
 
 That protocol defines the layout and file ownership. You own exactly these
-files, under `features/<ADO-US>-<slug>/`:
+files, under `specs/<ADO-US>-<slug>/`:
 
 ```
 WORKFLOW-STATE.md   current execution reality, mutable
@@ -694,7 +700,7 @@ envelopes/          every Task Envelope issued, immutable once sent
 results/            every Task Result and Blocker Result received, immutable
 ```
 
-Planning artifacts — `global-spec.md`, `global-plan.md`, `contracts.md`,
+Planning artifacts — `spec.md`, `plan.md`, `tasks.md`, `contracts.md`,
 `handoff.md` — belong to the `captain`. When a plan is wrong, route the
 correction back; do not edit it yourself.
 

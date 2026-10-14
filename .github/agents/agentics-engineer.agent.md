@@ -550,6 +550,20 @@ Do not invent work-item identifiers.
 
 Follow the repository's branch and traceability conventions.
 
+Branch identity is governed by `protocols/feature-branching.md`. Before any
+write, align with `repository.branch` from the Task Envelope:
+
+```bash
+export GIT_BRANCH_NAME="<repository.branch>"
+```
+
+Never infer the branch name and never let Spec Kit generate it. `/speckit.*`
+commands auto-create a sequentially numbered branch when `GIT_BRANCH_NAME` is
+not set, which breaks the cross-repository convention.
+
+If the active branch differs from the envelope and cannot be reconciled safely,
+return `BLOCKED / BRANCH_MISMATCH`.
+
 When commit authorization is present, commit only work belonging to the
 assigned feature/task.
 
