@@ -271,6 +271,15 @@ delivery:
 rejected by the worker as `WORKER_MISMATCH` or `REPOSITORY_MISMATCH`, and that
 is your bug to fix, not theirs.
 
+`repository.branch` MUST be stated explicitly as `feature/<ADO-US>-<slug>`,
+identical across every repository in the feature. The engineer materializes it;
+it never derives it.
+
+The first envelope a repository receives for a feature also authorizes
+materialization of its local `specs/<ADO-US>-<slug>/`, without which
+`/speckit.implement` cannot run. Expect the first Task Result for a repository
+to include that setup.
+
 Do not weaken acceptance criteria while translating Captain output into a Task
 Envelope. If a criterion is untestable as written, return it to the `captain`
 rather than softening it.

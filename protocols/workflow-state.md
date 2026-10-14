@@ -106,6 +106,97 @@ the global one remains authoritative for **scope and numbering**.
 
 ---
 
+# Materialization
+
+`/speckit.implement` runs `check-prerequisites.sh --require-tasks`, which
+**aborts unless `plan.md` and `tasks.md` exist in the repository where it
+runs**. It cannot read them from another path.
+
+Global artifacts in this repository therefore do not satisfy it. Each product
+repository needs its own feature directory before implementation can start.
+
+## Who materializes
+
+The repository's `-engineer`, under a Task Envelope, as its first action for the
+feature.
+
+Not the `captain`: writing into a product repository would break its write
+scope, which is the central invariant of this system.
+
+Not the `admiral`: it issues envelopes, it does not write product repositories.
+
+## What is produced
+
+In the product repository, at `specs/<ADO-US>-<slug>/`:
+
+| File | Origin | Why |
+|---|---|---|
+| `spec.md` | projection of the global `spec.md` | global scope is authoritative |
+| `tasks.md` | filtered projection, ids preserved | global numbering is authoritative |
+| `plan.md` | generated locally with `/speckit.plan` | the technical approach is repository-local knowledge |
+
+`plan.md` is **generated, not copied**. The `captain` defines outcome and
+constraints, never implementation mechanics. The repository decides how, with
+its own constitution and scoped instructions in front of it.
+
+`spec.md` is narrowed, not duplicated: it states what **this repository** must
+do, referencing the global spec for cross-repository behaviour.
+
+`tasks.md` contains only the tasks assigned to this repository, keeping their
+global ids. Renumbering breaks traceability between `spec_tasks` in the
+envelope, the repository's tasks and the commit trailer.
+
+## Sequence
+
+```text
+Task Envelope received
+      |
+      v
+export GIT_BRANCH_NAME="<repository.branch>"   feature-branching.md
+      |
+      v
+create or switch to the feature branch
+      |
+      v
+create specs/<ADO-US>-<slug>/
+      |
+      v
+write spec.md      projection of the global spec, narrowed to this repository
+      |
+      v
+/speckit.plan      generates plan.md from the local spec and constitution
+      |
+      v
+write tasks.md     filtered projection, global ids preserved
+      |
+      v
+/speckit.implement now that prerequisites exist
+```
+
+Materialization happens **once per feature per repository**. A later envelope
+for the same feature finds the directory already present and skips to
+implementation.
+
+## Divergence rule
+
+After materialization the two levels serve different questions:
+
+```text
+global  specs/<feature>/     what the feature must achieve, who owns what
+local   specs/<feature>/     what this repository implements, and its progress
+```
+
+When they disagree about **scope**, the global artifact is right and the
+divergence is a blocker, not a local correction.
+
+When they disagree about **progress or implementation detail**, the repository
+is right.
+
+An engineer that discovers the global scope is wrong returns a blocker. It does
+not silently widen its local `spec.md`.
+
+---
+
 # File ownership
 
 Two roles write to this repository. Ownership prevents collision.

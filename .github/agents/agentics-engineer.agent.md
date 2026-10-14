@@ -268,6 +268,46 @@ When repository instructions define a more precise precedence, follow them.
 
 ---
 
+# Feature materialization
+
+`/speckit.implement` runs `check-prerequisites.sh --require-tasks` and **aborts
+unless `plan.md` and `tasks.md` exist in this repository**. It cannot read them
+from the orchestration repository.
+
+If `specs/<ADO-US>-<slug>/` does not yet exist here, materialize it first. This
+is your work; neither the `captain` nor the `admiral` may write in this
+repository.
+
+See `protocols/workflow-state.md` for the authoritative rules. In summary:
+
+```text
+export GIT_BRANCH_NAME="<repository.branch>"
+create or switch to the feature branch
+create specs/<ADO-US>-<slug>/
+spec.md    projection of the global spec, narrowed to Agentics
+/speckit.plan   generates plan.md locally
+tasks.md   filtered projection, global task ids preserved
+/speckit.implement
+```
+
+Rules that matter:
+
+- `plan.md` is **generated here, not copied**. The technical approach is
+  Agentics knowledge, decided with the Agentics Constitution in front of you.
+- `tasks.md` keeps the **global task ids**. If the envelope assigns `T014`, your
+  `tasks.md` contains `T014`, not a renumbered `T001`. Renumbering breaks
+  traceability with `spec_tasks` and the `Refs:` trailer.
+- `spec.md` states what **this repository** must do and references the global
+  spec for cross-repository behaviour. Do not duplicate the global spec.
+
+Materialize once per feature. A later envelope for the same feature finds the
+directory present and goes straight to implementation.
+
+If the global scope turns out to be wrong, return a blocker. Do not silently
+widen your local `spec.md`.
+
+---
+
 # Agentics technical domain
 
 You are expected to understand the repository's technical vocabulary and
@@ -457,6 +497,9 @@ load Agentics governance
       |
       v
 restore feature state
+      |
+      v
+materialize specs/<feature>/ if absent
       |
       v
 use feature-delivery skill
