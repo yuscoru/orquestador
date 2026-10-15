@@ -19,7 +19,7 @@ repositories:
       specs/696-sre-response-quality/IMPLEMENTATION-CHECKPOINT.md (in soarplus-api; created by E1, commit d2b4df9)
     envelopes:
       - {id: E1, file: envelopes/801-api-engineer-1.md, spec_tasks: [T003, T004, T005, T006], status: completed, commit: d2b4df9, pushed: false}
-      - {id: E2, spec_tasks: [T007, T008, T009, T010, T011], status: planned}
+      - {id: E2, file: envelopes/801-api-engineer-2.md, spec_tasks: [T007, T008, T009, T010, T011], status: issued}
       - {id: E3, spec_tasks: [T012, T013, T014, T015, T016], status: planned}
       - {id: E4, spec_tasks: [T017, T018, T019, T020, T021], status: planned}
       - {id: E5, spec_tasks: [T022, T023, T024, T025, T026], status: planned}
