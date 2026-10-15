@@ -117,3 +117,28 @@ task: 801
 slice: E3 (T012-T016, catalog and history routes)
 envelope: envelopes/801-api-engineer-3.md
 reason: handoff.md recommended_execution_order step 3; E2 processed
+
+## 2026-10-15 — result received
+
+worker: api-engineer
+task: 801
+slice: E3
+status: COMPLETED
+result: results/2026-10-15-api-engineer-801-3.md
+reporting defect: the result came as free-form markdown with a minimal YAML header, not in the canonical structure of
+  protocols/task-result.md (no assignment, acceptance_criteria, contracts, git or ado blocks). Content is evidenced and
+  was verified below; the format is a defect to be corrected in the next envelope, not a reason to discard the result.
+
+## 2026-10-15 — result verification by the admiral
+
+verified (read-only, soarplus-api): commit b7d2510 touches exactly the 8 files the result lists; trailer "Refs: #696 #801";
+  api/api.py diff is only the router import, the Quality tag entry and include_router; api/routes/quality.py declares prefix /quality,
+  tag Quality, and uses authorize_capability_or_admin (no require_capability); pre-existing modified files not staged.
+verified (ADO): comment id 18097184 present on Task #801; Task still Active.
+not verified: test results (63 new, 556 full suite) are taken from the worker's report; behaviour on a live DocumentDB.
+states reached: code written yes; validation executed yes (reported); validation passed yes (reported); state persisted yes;
+  commit created yes; push NO; PR NO; merged NO; deployed NO.
+contracts.changed: true. quality-read-api now has two real routes (R1, R2). Consumers (frontend, cassdk) have no assignment, so no
+  stale assumption to propagate; plan section 3 remains the design source until the OpenAPI surface is complete (T022).
+decision carried by the worker, accepted: catalog uses controller-side reduction over all valid points (about 5 MB per request after a
+  year of daily evaluations, no cache). Recorded as a risk with a stated trigger; to be validated on dev by the user/ops.
