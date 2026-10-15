@@ -142,3 +142,11 @@ contracts.changed: true. quality-read-api now has two real routes (R1, R2). Cons
   stale assumption to propagate; plan section 3 remains the design source until the OpenAPI surface is complete (T022).
 decision carried by the worker, accepted: catalog uses controller-side reduction over all valid points (about 5 MB per request after a
   year of daily evaluations, no cache). Recorded as a risk with a stated trigger; to be validated on dev by the user/ops.
+
+## 2026-10-15 — envelope issued
+
+worker: api-engineer
+task: 801
+slice: E4 (T017-T021, detail, cases, metric descriptors)
+envelope: envelopes/801-api-engineer-4.md
+reason: handoff.md recommended_execution_order step 4; E3 processed; canonical result format required

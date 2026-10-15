@@ -22,7 +22,7 @@ repositories:
       - {id: E2, file: envelopes/801-api-engineer-2.md, spec_tasks: [T007, T008, T009, T010, T011], status: returned-no-result, superseded-by: E2-retry}
       - {id: E2-retry, file: envelopes/801-api-engineer-2-retry.md, spec_tasks: [T007, T008, T009, T010, T011], status: completed, commit: bad615b, pushed: false}
       - {id: E3, file: envelopes/801-api-engineer-3.md, spec_tasks: [T012, T013, T014, T015, T016], status: completed, commit: b7d2510, pushed: false}
-      - {id: E4, spec_tasks: [T017, T018, T019, T020, T021], status: planned}
+      - {id: E4, file: envelopes/801-api-engineer-4.md, spec_tasks: [T017, T018, T019, T020, T021], status: issued}
       - {id: E5, spec_tasks: [T022, T023, T024, T025, T026], status: planned}
 
 active_blockers: []
