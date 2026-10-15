@@ -109,3 +109,11 @@ open items carried forward: behaviour on live DocumentDB unverified (user/ops); 
   leaves latest-per-key reduction to the controller, which T013 must justify or replace; summary.unavailable_metrics.<id> is
   projected (writer free text, key presence only read, never exposed).
 contracts.changed: false.
+
+## 2026-10-15 — envelope issued
+
+worker: api-engineer
+task: 801
+slice: E3 (T012-T016, catalog and history routes)
+envelope: envelopes/801-api-engineer-3.md
+reason: handoff.md recommended_execution_order step 3; E2 processed
