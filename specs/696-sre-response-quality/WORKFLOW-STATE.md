@@ -23,7 +23,8 @@ repositories:
       - {id: E2-retry, file: envelopes/801-api-engineer-2-retry.md, spec_tasks: [T007, T008, T009, T010, T011], status: completed, commit: bad615b, pushed: false}
       - {id: E3, file: envelopes/801-api-engineer-3.md, spec_tasks: [T012, T013, T014, T015, T016], status: completed, commit: b7d2510, pushed: false}
       - {id: E4, file: envelopes/801-api-engineer-4.md, spec_tasks: [T017, T018, T019, T020, T021], status: completed, commit: 84bfd0c, pushed: false}
-      - {id: E5, file: envelopes/801-api-engineer-5.md, spec_tasks: [T022, T023, T024, T025, T026], status: issued}
+      - {id: E5, file: envelopes/801-api-engineer-5.md, spec_tasks: [T022, T023, T024, T025, T026], status: returned-no-result, observed: "commits b4164e1 and d8faac3 in soarplus-api (pushed: false); no Task Result, no ADO comment", closed-by: E5-close}
+      - {id: E5-close, file: envelopes/801-api-engineer-5-close.md, spec_tasks: [T022, T023, T024, T025, T026], status: issued}
 
 active_blockers: []
 

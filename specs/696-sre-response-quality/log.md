@@ -185,3 +185,23 @@ task: 801
 slice: E5 (T022-T026, contract test, cross-cutting tests, docs, full suite, final checkpoint)
 envelope: envelopes/801-api-engineer-5.md
 reason: handoff.md recommended_execution_order step 5; E4 processed
+
+## 2026-10-15 — session lost, E5 observed (no result received)
+
+observation: the session was interrupted after E5 was issued; no Task Result was stored for E5. Read-only observation by the admiral
+  and the captain in soarplus-api: commits b4164e1 and d8faac3 on feature/696-sre-response-quality, trailer "Refs: #696 #801", touching
+  only README.md, four test files, IMPLEMENTATION-CHECKPOINT.md and tasks.md; tasks.md shows T003-T026 complete; the two new test modules
+  pass (37) and the full unit suite gives 679 run with exactly the 5 recorded baseline failures (re-run by the admiral).
+  ADO Task #801 has no comment for E5: the last one is the E4 comment (id 18097197, 2026-10-15T20:51Z), earlier than the E5 commits.
+not established: that E5 is closed. Code and documentation are observed; the E5 Task Result and the ADO comment do not exist. The
+  baseline isolation at 580a532 is taken from the checkpoint and was not re-run.
+routing: closure envelope to the same worker, no code change authorized.
+
+## 2026-10-15 — envelope issued
+
+worker: api-engineer
+task: 801
+slice: E5-close (verify E5, then publish the ADO comment and return the canonical Task Result of E5)
+envelope: envelopes/801-api-engineer-5-close.md
+reason: E5 observed as implemented but unreported; user asked the worker to confirm E5 was closed apart from the ADO comment and to hand the
+  result to the admiral. delivery: update_ado true, commit false, push false, create_pr false, deploy false
