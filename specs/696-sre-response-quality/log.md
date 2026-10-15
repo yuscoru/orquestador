@@ -177,3 +177,11 @@ decisions made locally by the worker where the plan was silent, accepted and vis
   unscored_rubrics; unavailable_metrics limited to the two known metric ids; case_count is the union of both case sources.
 risks carried forward: R4 reads the whole case set of one window before paging; inclusion projection through arrays proven only
   against an in-memory fake (if DocumentDB differs, explanation_available could be false for every rubric, without leaking text).
+
+## 2026-10-15 — envelope issued
+
+worker: api-engineer
+task: 801
+slice: E5 (T022-T026, contract test, cross-cutting tests, docs, full suite, final checkpoint)
+envelope: envelopes/801-api-engineer-5.md
+reason: handoff.md recommended_execution_order step 5; E4 processed
