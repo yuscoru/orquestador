@@ -205,3 +205,30 @@ slice: E5-close (verify E5, then publish the ADO comment and return the canonica
 envelope: envelopes/801-api-engineer-5-close.md
 reason: E5 observed as implemented but unreported; user asked the worker to confirm E5 was closed apart from the ADO comment and to hand the
   result to the admiral. delivery: update_ado true, commit false, push false, create_pr false, deploy false
+
+## 2026-10-15 — result received
+
+worker: api-engineer
+task: 801
+slice: E5 (returned by the closure envelope E5-close)
+status: COMPLETED
+result: results/2026-10-15-api-engineer-801-5.md
+format: canonical
+worker answer to the closure question: YES, E5 was complete and validated apart from the ADO comment and the Task Result.
+
+## 2026-10-15 — result verification by the admiral
+
+verified (ADO, read back by the admiral): comment id 18097212 present on Task #801, created 2026-10-15T21:50:05Z, text consistent with the
+  result; Task state Active (rev 7).
+verified (read-only, soarplus-api): HEAD still d8faac3 after E5-close (no new commit); working-tree status unchanged at 19 entries, nothing
+  staged; no E5-close temporary file left in /tmp. Before E5-close the admiral had re-run the two new modules (37 OK) and the full suite
+  (679 run, exactly the 5 baseline failures).
+not verified by the admiral: the worker's baseline-isolation run at 580a532 (390 tests, same 5 fail) is taken from its report; live DocumentDB,
+  writer indexes, Python 3.13 and custom roles remain unverified. The worker could not verify the README/checkpoint content independently of what
+  it contains.
+states reached for soarplus-api E5: code written yes; validation executed yes; validation passed yes; state persisted yes; commit created yes
+  (b4164e1, d8faac3); ADO comment yes (confirmed); push NO; PR NO; merged NO; deployed NO.
+contracts.changed: false in this closure (quality-read-api and quality.view were changed by E1-E4); consumers frontend and cassdk still unassigned.
+baseline failures: resolved as pre-existing (see worker report); remain unfixed.
+state: soarplus-api -> IMPLEMENTATION_COMPLETE (local, unpushed). Feature phase stays IMPLEMENTING: frontend and cassdk have no assignment and
+  Gate 4 is pending.

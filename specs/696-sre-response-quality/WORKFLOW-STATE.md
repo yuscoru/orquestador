@@ -13,8 +13,8 @@ repositories:
   - name: soarplus-api
     worker: api-engineer
     branch: feature/696-sre-response-quality
-    status: IMPLEMENTING
-    last_result: results/2026-10-15-api-engineer-801-4.md
+    status: IMPLEMENTATION_COMPLETE   # local only: 7 commits ahead of origin, not pushed; live-DocumentDB checks outstanding
+    last_result: results/2026-10-15-api-engineer-801-5.md
     implementation_reality: >
       specs/696-sre-response-quality/IMPLEMENTATION-CHECKPOINT.md (in soarplus-api; created by E1, commit d2b4df9)
     envelopes:
@@ -24,15 +24,15 @@ repositories:
       - {id: E3, file: envelopes/801-api-engineer-3.md, spec_tasks: [T012, T013, T014, T015, T016], status: completed, commit: b7d2510, pushed: false}
       - {id: E4, file: envelopes/801-api-engineer-4.md, spec_tasks: [T017, T018, T019, T020, T021], status: completed, commit: 84bfd0c, pushed: false}
       - {id: E5, file: envelopes/801-api-engineer-5.md, spec_tasks: [T022, T023, T024, T025, T026], status: returned-no-result, observed: "commits b4164e1 and d8faac3 in soarplus-api (pushed: false); no Task Result, no ADO comment", closed-by: E5-close}
-      - {id: E5-close, file: envelopes/801-api-engineer-5-close.md, spec_tasks: [T022, T023, T024, T025, T026], status: issued}
+      - {id: E5-close, file: envelopes/801-api-engineer-5-close.md, spec_tasks: [T022, T023, T024, T025, T026], status: completed, ado_comment: 18097212, commit: none}
 
 active_blockers: []
 
 pending_next_actions:
-  - Issue E5 (T022-T026): contract test over the router OpenAPI, cross-cutting tests, README, full suite, final checkpoint with cassdk assessment.
+  - Frontend assignment for the quality-read-api consumer: no envelope, no plan decision on phase/worker yet (captain/user).
   - Catalog uses controller-side reduction (no aggregation); validate volume/performance on dev (user/ops) before history grows by an order of magnitude.
   - Live-DocumentDB behaviour of the predicate and projections (projection through arrays, writer indexes) is unverified: user/ops.
-  - 5 baseline test failures reported by api-engineer (test_usage x2, test_llm_providers_manage_own_capability x3); not isolated from the user's uncommitted edits in soarplus-api.
+  - 5 baseline test failures (test_usage x2, test_llm_providers_manage_own_capability x3): resolved as pre-existing - they fail identically on the whole suite exported from 580a532 (390 tests, git archive), so they pre-date the feature and the user's uncommitted edits. Still unfixed.
   - User/ops checks, not assignable to a worker: custom roles (GET /rbac/roles), writer index existence, smoke on dev with real DocumentDB data.
   - cassdk client addition: unresolved, no registered worker and repository not present.
   - Gate 4 (delivery) decision needed before any push, PR or deploy.
