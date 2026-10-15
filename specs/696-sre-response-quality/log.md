@@ -150,3 +150,30 @@ task: 801
 slice: E4 (T017-T021, detail, cases, metric descriptors)
 envelope: envelopes/801-api-engineer-4.md
 reason: handoff.md recommended_execution_order step 4; E3 processed; canonical result format required
+
+## 2026-10-15 — result received
+
+worker: api-engineer
+task: 801
+slice: E4
+status: COMPLETED
+result: results/2026-10-15-api-engineer-801-4.md
+format: canonical (the format defect of E3 did not recur)
+
+## 2026-10-15 — result verification by the admiral
+
+verified (read-only, soarplus-api): commit 84bfd0c touches exactly the 10 files the result lists; trailer "Refs: #696 #801";
+  api/api.py not changed in the commit; the only data-layer change is one allow-listed projection path
+  (raw_eval_history.case_diagnostics.eval_id); five Depends(quality_view_authorize) occurrences in api/routes/quality.py
+  (five routes) and no require_capability in that file; pre-existing modified files not staged.
+verified (ADO): comment id 18097197 present on Task #801; Task still Active (state not re-read by the admiral).
+not verified: test results (86 new, 642 full suite) taken from the worker's report; behaviour on a live DocumentDB; Python 3.13 runtime.
+states reached: code written yes; validation executed yes (reported); validation passed yes (reported); state persisted yes;
+  commit created yes; push NO; PR NO; merged NO; deployed NO.
+contracts.changed: true, additive (R3, R4, R5). The route surface of quality-read-api is now complete; consumers have no
+  assignment yet, so no stale assumption to propagate. From the OpenAPI available at T022 the generated schema supersedes plan section 3.
+decisions made locally by the worker where the plan was silent, accepted and visible to the captain via the checkpoint:
+  label "Calidad de la respuesta" for rubric_based_final_response_quality_v1; null or non-0/1 rubric verdict reported under
+  unscored_rubrics; unavailable_metrics limited to the two known metric ids; case_count is the union of both case sources.
+risks carried forward: R4 reads the whole case set of one window before paging; inclusion projection through arrays proven only
+  against an in-memory fake (if DocumentDB differs, explanation_available could be false for every rubric, without leaking text).
