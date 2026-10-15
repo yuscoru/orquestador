@@ -14,13 +14,13 @@ repositories:
     worker: api-engineer
     branch: feature/696-sre-response-quality
     status: IMPLEMENTING
-    last_result: results/2026-10-15-api-engineer-801-1.md
+    last_result: results/2026-10-15-api-engineer-801-2.md
     implementation_reality: >
       specs/696-sre-response-quality/IMPLEMENTATION-CHECKPOINT.md (in soarplus-api; created by E1, commit d2b4df9)
     envelopes:
       - {id: E1, file: envelopes/801-api-engineer-1.md, spec_tasks: [T003, T004, T005, T006], status: completed, commit: d2b4df9, pushed: false}
-      - {id: E2, file: envelopes/801-api-engineer-2.md, spec_tasks: [T007, T008, T009, T010, T011], status: returned-no-result}
-      - {id: E2-retry, file: envelopes/801-api-engineer-2-retry.md, spec_tasks: [T007, T008, T009, T010, T011], status: issued}
+      - {id: E2, file: envelopes/801-api-engineer-2.md, spec_tasks: [T007, T008, T009, T010, T011], status: returned-no-result, superseded-by: E2-retry}
+      - {id: E2-retry, file: envelopes/801-api-engineer-2-retry.md, spec_tasks: [T007, T008, T009, T010, T011], status: completed, commit: bad615b, pushed: false}
       - {id: E3, spec_tasks: [T012, T013, T014, T015, T016], status: planned}
       - {id: E4, spec_tasks: [T017, T018, T019, T020, T021], status: planned}
       - {id: E5, spec_tasks: [T022, T023, T024, T025, T026], status: planned}
@@ -28,7 +28,8 @@ repositories:
 active_blockers: []
 
 pending_next_actions:
-  - Issue E2 (T007-T011); T010 may return a blocker to the captain.
+  - Issue E3 (T012-T016): catalog and history routes. T013 must state and justify the catalog strategy.
+  - Live-DocumentDB behaviour of the predicate and projections (projection through arrays, writer indexes) is unverified: user/ops.
   - 5 baseline test failures reported by api-engineer (test_usage x2, test_llm_providers_manage_own_capability x3); not isolated from the user's uncommitted edits in soarplus-api.
   - User/ops checks, not assignable to a worker: custom roles (GET /rbac/roles), writer index existence, smoke on dev with real DocumentDB data.
   - cassdk client addition: unresolved, no registered worker and repository not present.
