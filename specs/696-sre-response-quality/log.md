@@ -59,3 +59,28 @@ task: 801
 slice: E2 (T007-T011, foundation)
 envelope: envelopes/801-api-engineer-2.md
 reason: handoff.md recommended_execution_order step 2; E1 processed
+
+## 2026-10-15 — envelope returned no result
+
+worker: api-engineer
+task: 801
+slice: E2
+envelope: envelopes/801-api-engineer-2.md
+observation: the invocation completed with no output - neither a Task Result nor a Blocker Result. This is not a COMPLETED,
+  PARTIAL or blocked state; nothing is claimed.
+observed state of soarplus-api (read-only, admiral): HEAD still d2b4df9 (no new commit); uncommitted modifications to
+  api/AWS/documentdb.py and api/utils/models.py, new untracked api/controllers/control_quality.py,
+  tests/test_quality_data_access.py and tests/test_quality_models_and_controller.py; no change to local tasks.md or
+  IMPLEMENTATION-CHECKPOINT.md; no new ADO comment on Task #801.
+  api/AWS/documentdb.py and api/utils/models.py were not among the pre-existing modified files at preflight, so these
+  modifications are attributed to the interrupted E2 attempt (inference).
+routing: retry directly with the same assignment (not a re-plan); the worker must establish for itself which of the
+  uncommitted work is sound and validated.
+
+## 2026-10-15 — envelope issued (retry)
+
+worker: api-engineer
+task: 801
+slice: E2 retry 1
+envelope: envelopes/801-api-engineer-2-retry.md
+reason: previous E2 invocation returned no result; same assignment plus resumption constraints
