@@ -1,0 +1,44 @@
+{
+  "folders": [
+    { "name": "orchestration", "path": "." },
+    { "name": "agentics", "path": "../soarplus-agentics" },
+    { "name": "api", "path": "../soarplus-api" },
+    { "name": "frontend", "path": "../soarplus-frontend-app1" },
+    { "name": "kubernetes", "path": "../soarplus-kubernetes" }
+  ],
+  "settings": {
+    "// Spec Kit resolves the repo from the terminal cwd, not from the folder you clicked.": "Before any /speckit.* command run: cd <repo> && ./.specify/scripts/bash/check-prerequisites.sh --paths-only",
+
+    "// speckit.* appears four times in the agent picker. Tested, not fixable, and harmless.": "chat.agentFilesLocations with a relative 'false' disables every folder including this one, and an absolute 'true' does not override it. Absolute 'false' entries do not suppress anything either. Left at defaults on purpose. The four speckit agent files are byte-identical (same md5), and the repository acted upon is decided by the terminal cwd, not by which entry you pick.",
+
+    "// REAL risk to watch: Spec Kit version skew.": "All four repos are on 0.8.12 and their check-prerequisites.sh are byte-identical. If one repo upgrades alone, the loaded prompt and the executed scripts diverge silently. Verify with: for r in dev-orchestration agentics api frontend-app1; do python3 -c \"import json;print(json.load(open('/root/soarplus-$r/.specify/init-options.json'))['speckit_version'])\"; done",
+
+    "// Path-scoped instructions stay enabled: they are what keeps each repo's rules applied.": "Relative path resolves per workspace folder, which is what we want here.",
+    "chat.instructionsFilesLocations": {
+      ".github/instructions": true
+    },
+
+    "// Read-only inspection commands, scoped to the soarplus repos.": "Writes are NOT auto-approved on purpose.",
+    "chat.tools.terminal.autoApprove": {
+      ".specify/scripts/bash/": true,
+      ".specify/scripts/powershell/": true,
+      "git -C /root/soarplus-": true,
+      "git status": true,
+      "git log": true,
+      "git branch": true,
+      "git diff": true,
+      "grep": true,
+      "ls": true,
+      "cat": true,
+      "head": true,
+      "tail": true,
+      "wc": true,
+      "find /root/soarplus-": true
+    },
+
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.next": true
+    }
+  }
+}

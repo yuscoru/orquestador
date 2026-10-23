@@ -83,10 +83,11 @@ strings, serialized uniformly across `evaluated_at` and `window.from/to`. Every 
 | # | Route | Purpose |
 |---|---|---|
 | R1 | `GET /quality/targets` | Catalog of evaluated targets |
-| R2 | `GET /quality/targets/{target_type}/{target}/evaluations` | Paginated history of one target |
+| R2 | `GET /quality/targets/{target}/evaluations` *(amended by CR-001)* | Last-5 scored history of one target |
 | R3 | `GET /quality/evaluations/{eval_run_id}` | Detail of one evaluation, without cases |
 | R4 | `GET /quality/evaluations/{eval_run_id}/cases` | Paginated evaluated cases of one evaluation |
 | R5 | `GET /quality/metrics` | Static descriptors of the two metrics (no database) |
+| R6 | `GET /quality/targets/history` *(new, CR-001)* | All targets, each with its last-5 scored history |
 
 **Gate-2 decision on R5**: resolved — keep. It exists so that the label «Fidelidad a la evidencia», scale and
 polarity live in one place instead of being hard-coded in the frontend and in `cassdk` (FR-006). If
@@ -102,15 +103,20 @@ MetricValue   { value: float|null, n: int|null, unavailable: bool }
 EvaluationPoint {
   eval_run_id, evaluated_at,
   window { from, to, n, min_sample },
-  status: measured | low_sample | no_activity | no_eligible_cases | evidence_incomplete,
-  sample_sufficient: bool,
+  status: string | null,  # CR-004 approved 2026-10-22: open, no OpenAPI enum
+            # known strings documented; future strings preserved literally
+            # invalid_status = API sentinel for persisted non-string corruption
+            # null (CR-002) = legacy document without monitoring status
+  sample_sufficient: bool | null,   # null for legacy points (CR-002)
   evaluator { profile, profile_version, judge_model },
   metrics { hallucinations_v1: MetricValue, rubric_based_final_response_quality_v1: MetricValue }
 }
 ```
 
 `metrics` is a typed object with one property per metric id; both are always present. Adding a third
-metric later is an additive change (FR-017).
+metric later is an additive change (FR-017). Status is presentation metadata, not the CR-001
+predicate: known and future strings are preserved; `judge_unavailable`, unknown strings and
+`invalid_status` are degraded, while null remains legacy. *(CR-004; delta approved 2026-10-22.)*
 
 ### R1 — catalog
 
@@ -121,12 +127,26 @@ Envelope `{ items, total }`. Order: `target_type`, `target` ascending. `eval_pro
 from the most recent valid point. **No derived "kind" or `is_orchestrator` field**: orchestrators are
 `eval_profile == "orchestrator"` (spec D5; avoids a second source of truth).
 
-### R2 — history
+### R2 — history *(amended by CR-001)*
 
-Path: `target_type` (enum), `target` (validated against a conservative pattern, used only as a literal
-equality value). Query: `limit` (default 50, 1–200), `offset` (≥0), `order` (`desc` default | `asc`).
-Envelope `{ items: [EvaluationPoint], total }`. Order by `timestamp`, tie-break `eval_run_id`, so pages are
-deterministic. A target with zero valid points → 404.
+Path: `target` only (validated against a conservative pattern, used only as a literal equality
+value); `target_type` removed from the path (user-asserted cross-type uniqueness; if matching
+documents span more than one `target_type`, respond 409, Spanish detail). No paging parameters.
+Response: the last **5** scored points by `timestamp` descending, tie-break `eval_run_id`.
+Envelope `{ items: [EvaluationPoint], total }` where total is the target's scored-point count.
+A target with zero scored points → 404.
+
+Previous wording (superseded by CR-001): path (`target_type` enum + `target`); query `limit`
+(default 50, 1–200), `offset` (≥0), `order` (`desc` default | `asc`); paginated full history.
+
+### R6 — all-targets history *(new, CR-001)*
+
+Query: `limit`/`offset` **over targets** (documented default and hard maximum); no `target_type`
+or `eval_profile` filters. Deterministic order by `(target_type, target)`. Item shape:
+`{ target_type, target, eval_profile, history: [EvaluationPoint] }`, history = last 5 scored
+points descending, same predicate and point shape as R2. Implementation note: reuses the
+full-series fetch of the catalog (`list_quality_catalog_points`); the controller reduction
+changes from latest-1 to latest-5 per key.
 
 ### R3 — detail
 
@@ -160,10 +180,15 @@ Allowed source fields only: identity (`target_type`, `target`, `eval_run_id`), `
 `raw_eval_history.case_diagnostics.{eval_id,rubric_scores,missing_rubrics,evidence_unavailable,judge_unavailable}`
 and the per-rubric `rationale_available` flag only. Everything else is excluded (FR-009).
 
-### Valid-point predicate (single definition)
+### Valid-point predicate (single definition) *(amended by CR-001)*
 
-A document is a series point only if **all** hold: `schema_version` 4; `mode` `offline_log`;
-`raw_eval_history.monitoring.checkpoint_committed` true; `raw_eval_history.monitoring.status` is one of the
+A document is a series point only if **all** hold: `schema_version` 4; `mode` `offline_log`; both
+headline metrics (`rubric_based_final_response_quality_v1`, `hallucinations_v1`) carry a score
+(present, not null/unavailable). The predicate stays defined once and is used by every quality
+query (catalog, R2, R6, detail, cases).
+
+Previous wording (superseded by CR-001): also required
+`raw_eval_history.monitoring.checkpoint_committed` true; status one of the
 five contract statuses (so `judge_unavailable` never qualifies, spec C3); `raw_eval_history.rescore` absent
 or null; `raw_eval_history.validation` absent or null. [O] basis: agentics `target_history.py` already uses
 committed + `offline_log`; rescore and validation markers per `log_eval.py`/`rescore_eval.py`.
@@ -181,6 +206,7 @@ committed + `offline_log`; rescore and validation markers per `log_eval.py`/`res
 | Route prefix | `/quality` | no collision found [O], not exhaustively checked |
 | Index ownership | **writer (agentics) owns all `agent_eval_results` indexes; the API creates none** | `IndexOptionsConflict` risk [O]; collection low volume [A] |
 | Free-text `unavailable_metrics` reasons | not exposed; only `unavailable: bool` | free text, format not a contract |
+| Open status strings *(CR-004 approved 2026-10-22)* | preserve every writer string; known/default degraded branches; non-string → `invalid_status` + type-only log | closed enum breaks whole responses; CR-001 is score-based; null is legacy-only |
 | `eval_id` in cases | exposed (user-accepted risk C1) | task read access remains enforced by the task route [O] |
 
 ## 4. Dependencies
@@ -268,9 +294,10 @@ through them by any authenticated user.
 **Validation expectations.**
 - `unittest`, no network, `AWS.*` mocked per `testing.instructions.md`; written before the code.
 - Tests: capability registered and in the `user` seed; backfill idempotent and runs last; each new route
-  uses the gate; valid-point predicate (rescore, validation,
-  uncommitted, `judge_unavailable`, wrong schema/mode, absent-vs-null markers); allow-list projection
-  contains none of the FR-009 fields; paging bounds (`limit`, `offset`, `order`); operator-injection
+  uses the gate; scored-point predicate *(amended by CR-001: v4 + offline_log + both metrics scored;
+  exclusion tests cover unscored, rescored, validation, uncommitted, judge_unavailable, wrong schema/mode,
+  absent-vs-null markers)*; allow-list projection
+  contains none of the FR-009 fields; paging bounds where routes paginate (R1, R4, R6 `limit`/`offset`; R2 has none, CR-001); operator-injection
   strings treated as literals or rejected (422); 404 cases; deterministic order with equal timestamps.
 - Contract test over the new router alone (`FastAPI()` + `include_router` + `app.openapi()`), asserting
   paths, parameters and that no response schema contains a FR-009 field name. [A] this approach has not

@@ -82,6 +82,54 @@ analysis request.
 
 ---
 
+# Invocation visibility
+
+The routing hierarchy is enforced in each agent's YAML frontmatter, not only in
+prose:
+
+| agent | `user-invocable` | `disable-model-invocation` | `agents` |
+|---|---|---|---|
+| `admiral` | default (`true`) | `true` | `[captain, *-engineer]` |
+| `captain` | default (`true`) | default (`false`) | `[*-analyst]` |
+| `*-analyst` | `false` | default (`false`) | `[]` |
+| `*-engineer` | `false` | default (`false`) | `[]` |
+
+Consequences:
+
+- only `admiral` and `captain` appear in the agent picker; a human enters the
+  system through one of them;
+- workers are reachable only as subagents, which matches the protocols — an
+  `-analyst` needs a `worker-analysis.md` request and an `-engineer` needs a
+  Task Envelope, and neither exists in a free-form user prompt;
+- `agents: []` prevents a worker from sub-delegating, so repository write
+  ownership cannot be laundered through a second worker;
+- `admiral` is not model-invocable, so no agent can route work back into the
+  orchestrator. The `captain` reaches it through a handoff, which the user
+  confirms.
+
+Changing any of these fields changes the shared agent definition for everyone
+who clones the repository. Update this table in the same change.
+
+---
+
+# Pi team
+
+A separate set of workers for the Pi team (`pi/team.md`). Each owns one repository and serves
+both modes, `ANALYZE` and `IMPLEMENT`; the mode travels in each request, not in the worker.
+They do not use the `-analyst` / `-engineer` identifiers above, and `pi/launch.sh` and
+`pi/team.sh` read this table to resolve repositories.
+
+| worker | repository | modes |
+|---|---|---|
+| `agentics` | `soarplus-agentics` | ANALYZE, IMPLEMENT |
+| `api` | `soarplus-api` | ANALYZE, IMPLEMENT |
+| `frontend` | `soarplus-frontend-app1` | ANALYZE, IMPLEMENT |
+
+The link name of every Pi role, including `admiral`, is `<role>@soarplus`. The Pi team has no
+`captain`: planning is a phase of the `admiral`.
+
+---
+
 # Not yet registered
 
 The following identifiers appear in orchestration discussion but have **no**

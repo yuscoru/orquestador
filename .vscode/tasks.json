@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{ "label": "team: up", "type": "shell", "command": "${workspaceFolder}/pi/team.sh up", "problemMatcher": [] },
+		{ "label": "team: attach", "type": "shell", "command": "${workspaceFolder}/pi/team.sh attach", "presentation": { "panel": "dedicated", "reveal": "always" }, "problemMatcher": [] },
+		{ "label": "team: status", "type": "shell", "command": "${workspaceFolder}/pi/team.sh status", "problemMatcher": [] },
+		{ "label": "team: watch", "type": "shell", "command": "${workspaceFolder}/pi/team.sh watch", "presentation": { "panel": "dedicated", "reveal": "always" }, "problemMatcher": [] },
+		{ "label": "team: down", "type": "shell", "command": "${workspaceFolder}/pi/team.sh down", "problemMatcher": [] }
+	]
+}

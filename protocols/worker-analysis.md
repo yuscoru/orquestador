@@ -156,6 +156,44 @@ Additional execution constraints.
 
 ---
 
+# Triage questions
+
+The `captain` also uses `ANALYZE` to triage a finding. The request adds:
+
+```yaml
+question_type: TRIAGE
+
+finding:
+  issue_ref: issues/ISS-001.md
+  observation: >
+    What was seen, with evidence and no credentials.
+```
+
+The analyst answers one thing: **which outcome fits, and why.** It does not
+propose or write the fix. Read-only rules are unchanged; querying a data store
+is allowed only with read operations and without printing credentials.
+
+The response adds a `triage` block:
+
+```yaml
+triage:
+  outcome: IMPLEMENTATION_DEFECT | SPEC_CHANGE | SPEC_DEFECT | ENVIRONMENT_OR_DATA | NOT_A_DEFECT
+  touches_contract_or_spec: true | false
+  spec_reference: FR-004            # the requirement the behaviour is judged against
+  verified:
+    - what was observed first-hand, with path, query or output
+  assumed:
+    - what was not verified
+  recommended_scope: >
+    Repository-local scope of the fix or the change, if any.
+```
+
+`outcome` and its definitions are in `change-and-issue.md`. An analyst that finds
+the spec contradicts itself, a contract or the code answers `SPEC_DEFECT` and
+cites both sides; it does not choose one.
+
+---
+
 # Repository target validation
 
 Before loading repository context, the analyzer MUST verify that

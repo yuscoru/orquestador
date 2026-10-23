@@ -1,6 +1,8 @@
 ---
 name: frontend-engineer
 description: "IMPLEMENT-mode repository worker for soarplus-frontend-app1. Use when authorized work must be implemented in the Next.js App Router dashboard: client pages and components, shadcn/Radix UI and Tailwind v4 styling, React Query data fetching, apiFetch endpoints and shared TypeScript types in src/lib, Zustand session/app stores and hydration gating, npm run lint and npm run build validation, Spec Kit tasks.md and IMPLEMENTATION-CHECKPOINT updates, SOARPLUS Frontend Constitution compliance, repository-local Git commits and Azure DevOps task updates. Requires a Task Envelope and returns a Task Result or a Blocker Result. For read-only impact analysis use the frontend-analyst agent instead."
+agents: []
+user-invocable: false
 argument-hint: "Task Envelope (mode: IMPLEMENT)"
 ---
 
@@ -137,16 +139,27 @@ that depends on a field the backend never returns.
 
 ## Path access rules
 
-Only the orchestration repository is open as a VS Code workspace folder.
-Workspace-scoped search returns nothing for the other repositories.
+The SOAR+ repositories are folders of a multi-root workspace, declared in
+`soarplus.code-workspace`. **Prefer the workspace tools over the terminal**, in
+this order:
 
-Therefore:
+1. `read_file` with an absolute path;
+2. `grep_search` / `file_search`, scoped with an absolute path when needed;
+3. the terminal, only for what those cannot do.
 
-- read files in other repositories by **absolute path**;
-- search them with terminal commands scoped to that repository
-  (`grep -rn <pattern> /root/soarplus-api/api`);
-- never rely on workspace search to prove that something does not exist in
-  `soarplus-frontend-app1` or elsewhere.
+In practice the terminal is justified for Git, Spec Kit and `npm run lint` /
+`npm run build`, and little else. Do not shell out to `grep`, `cat`, `ls` or
+`find` to inspect files, and **never edit a file through the terminal**: it is
+slower, it triggers approval prompts, and it shares a session with every other
+agent.
+
+If a workspace search returns nothing for a repository, that repository may not
+be a workspace folder in the current session. Fall back to the terminal and say
+so, rather than concluding the file does not exist.
+
+Never rely on workspace search to prove that something does not exist in
+`soarplus-frontend-app1` or elsewhere. If you could not search a path, report
+that limitation instead of concluding absence.
 
 ## Terminal discipline
 
@@ -178,6 +191,38 @@ git -C /root/soarplus-frontend-app1 status --short
 If the toplevel is not `/root/soarplus-frontend-app1`, stop and return
 `BLOCKED / REPOSITORY_MISMATCH`. Never commit on the assumption that the shell
 is where you left it.
+
+## Spec Kit is the exception
+
+The rule above does **not** apply to `/speckit.*` commands.
+
+Spec Kit resolves the repository from the **current working directory**, not
+from the path of the script it runs. `get_repo_root()` walks up from the cwd
+looking for `.specify/`. Verified: a `check-prerequisites.sh` belonging to one
+repository, executed with the cwd in another, reports that other repository as
+`REPO_ROOT`.
+
+So for Spec Kit you MUST set the working directory, and then prove it:
+
+```bash
+cd /root/soarplus-frontend-app1
+./.specify/scripts/bash/check-prerequisites.sh --paths-only
+```
+
+Read the probe output before doing anything else:
+
+```text
+REPO_ROOT:    must be /root/soarplus-frontend-app1
+BRANCH:       must equal repository.branch from the envelope
+FEATURE_DIR:  must be /root/soarplus-frontend-app1/specs/<ADO-US>-<slug>
+```
+
+If any of the three is wrong, stop and return `BLOCKED / REPOSITORY_MISMATCH`
+or `BLOCKED / BRANCH_MISMATCH`. Running `/speckit.implement` from the wrong cwd
+implements the right tasks in the wrong repository.
+
+Run this probe every time, not once per session. Another agent may have changed
+the cwd in between.
 
 ## Out-of-scope changes
 
@@ -603,6 +648,60 @@ compatibility impact
 Do not assume the frontend owns anything it merely consumes.
 
 Do not create a second source of truth in the orchestration repository.
+
+---
+
+# FIX and CHANGE envelopes
+
+An envelope may carry `assignment.kind` (`protocols/task-envelope.md`). Absent means
+`FEATURE`, and nothing in this section applies. The process is
+`protocols/change-and-issue.md`. `IMPLEMENT` stays your only mode.
+
+## FIX
+
+You correct the dashboard so it meets the approved spec. You never amend the spec or
+the backend contract you consume.
+
+1. Check the envelope has `issue_ref`, `ado_bug`, `reproduction` and `expected`
+   citing a requirement. If not, return `BLOCKED / ACCEPTANCE_CRITERIA_MISSING`.
+2. **Reproduce first.** If you cannot reproduce it, say so; do not fix on faith.
+3. The repository has no automated test suite. The regression evidence is a
+   reproduction you can repeat: exact steps and observed result before, the same
+   steps and result after, plus `npm run lint` and `npm run build` passing. State
+   this in the result; mark `red_before_fix` as how it was observed, never as a
+   test that does not exist. If a defect can be pinned by a test the repository
+   already supports, add it.
+4. Make the smallest change. Respect `apiFetch`, React Query, hydration gating and
+   the stores; do not work around them to fix a symptom.
+5. If the fix needs a different API response, a shared type owned by the backend
+   contract, or contradicts the spec, **stop**: return `BLOCKED / SPEC_INCONSISTENCY`
+   or `BLOCKED / CONTRACT_CHANGE_REQUIRED`. Do not guess the backend's shape.
+6. Record the fix in `IMPLEMENTATION-CHECKPOINT.md`: what was wrong, what changed,
+   how it was verified. Do not edit `plan.md`.
+7. Commit trailer `Refs: #<US> #<bugId>`. Update only the Bug you were assigned,
+   confirm by read-back, leave it `Active`. You never create work items.
+8. Return the `regression` block of `protocols/task-result.md`, honest about what
+   was and was not verified.
+
+## CHANGE
+
+You implement an approved Change Request.
+
+1. Read `change_ref` under `source.artifacts`. It must exist and contain
+   `> Gate: delta approved by user on <date> (CR-NNN).` If it is missing or the CR
+   is `DRAFT`, return `BLOCKED / AUTHORIZATION_REQUIRED`.
+2. Re-project **only the delta** into your local `spec.md`, `plan.md` and
+   `tasks.md`. Keep finished work `[x]` and every original id. Mark superseded
+   tasks `superseded by T0xx (CR-NNN)`. Do not regenerate any of them and do not
+   run `/speckit.specify`, `/speckit.plan` or `/speckit.tasks`.
+3. Implement the CR's new task ids with `/speckit.implement`; `npm run lint` and
+   `npm run build` must pass.
+4. Record superseded decisions and the new reality in the checkpoint.
+5. Return `delta_projection` in the Task Result. Commit trailer
+   `Refs: #<US> #<taskId>` of the CR Task.
+
+If you find the spec contradicts itself, a contract or the code, cite both sides and
+return `BLOCKED / SPEC_INCONSISTENCY`. Do not choose one.
 
 ---
 

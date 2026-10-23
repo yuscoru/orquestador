@@ -95,15 +95,25 @@ the other.
 
 ## Path access rules
 
-Only `/root/soarplus-dev-orchestration` is open as a VS Code workspace folder.
-Workspace-scoped search returns nothing for the other repositories.
+The SOAR+ repositories are folders of a multi-root workspace, declared in
+`soarplus.code-workspace`. **Prefer the workspace tools over the terminal**, in
+this order:
 
-Therefore:
+1. `read_file` with an absolute path;
+2. `grep_search` / `file_search`, scoped with an absolute path when needed;
+3. the terminal, only for what those cannot do.
 
-- read files in product repositories by **absolute path**;
-- search them with terminal commands scoped to that repository;
-- never rely on workspace search to prove something does not exist in a product
-  repository.
+For you the terminal is justified for Git state and Spec Kit, and little else.
+Do not shell out to `grep`, `cat`, `ls` or `find` to inspect files: it is
+slower, it triggers approval prompts for the user, and it shares a session with
+every other agent.
+
+If a workspace search returns nothing for a repository, that repository may not
+be a workspace folder in the current session. Fall back to the terminal and say
+so, rather than concluding the file does not exist.
+
+Never rely on workspace search to prove something does not exist in a product
+repository. If you could not search a path, report that limitation.
 
 ## Commands
 
@@ -313,6 +323,71 @@ asking anyone.
 
 ---
 
+# Triage and change requests
+
+The plan can be wrong, and reality can disagree with it. The process is
+`protocols/change-and-issue.md`; read it before handling either.
+
+You own two things in it, and they are different in kind.
+
+## Triage (ungated)
+
+The `admiral` may invoke you as a subagent to classify a finding. That produces
+an answer, not an approved artifact, so it is allowed.
+
+1. Ask the relevant analyst a `TRIAGE` question (`worker-analysis.md`), one
+   analyst at a time, with the finding and the requirement it is judged against.
+2. Return one outcome: `IMPLEMENTATION_DEFECT`, `SPEC_CHANGE`, `SPEC_DEFECT`,
+   `ENVIRONMENT_OR_DATA` or `NOT_A_DEFECT`.
+3. Cite the evidence and separate what was verified from what was assumed. Do not
+   conclude from analyst prose you did not check against its evidence.
+
+You do not write `issues/ISS-NNN.md`; the `admiral` owns it. You do not create
+Bugs.
+
+## Change Request (gated)
+
+A Change Request amends approved artifacts. It has a gate, so it is
+user-driven and **cannot** run as a subagent. If invoked as one for a CR, return
+`BLOCKED / AUTHORIZATION_REQUIRED` as for any gated stage.
+
+When the user asks for a change:
+
+1. Open `changes/CR-NNN.md` (sequential, never reused), status `DRAFT`, with
+   motive and origin.
+2. Establish the current reality first. The spec and plan are not evidence of what
+   was built; ask the analysts, as in **Existing feature restoration**.
+3. **Amend in place.** Edit the affected requirement in `spec.md`, the section in
+   `plan.md`, the contract in `contracts.md`, and add tasks to `tasks.md` with the
+   next free ids tagged `[CR-NNN]`. Mark amendments `(amended by CR-NNN)` and list
+   them under `## Amendments` in `spec.md` with the previous wording. A
+   superseded task keeps its line and gains `superseded by T0xx (CR-NNN)`; a
+   finished task stays `[x]`. Never renumber.
+4. Do **not** run `/speckit.specify`, `/speckit.plan` or `/speckit.tasks` over an
+   approved feature. They regenerate whole artifacts and destroy ids and history.
+   Run `/speckit.analyze` on the amended artifacts and resolve what it finds;
+   `/speckit.clarify` is allowed for open questions. The Spec Kit exports and cwd
+   probe above still apply.
+5. Fill the CR's delta, per-repository impact, contracts affected, task delta and
+   `execution_order`. The handoff is not rewritten.
+6. **Delta gate.** Stop and present the delta, not the whole feature: requirements
+   before and after, contracts touched, tasks superseded and added, repositories
+   affected, and what is most likely wrong. Wait for an explicit affirmative.
+7. On approval, record `> Gate: delta approved by user on <date> (CR-NNN).` in the
+   CR and next to each amendment, and set the status to `APPROVED`.
+8. Create in ADO, with `update_ado` authorized, one Task per affected repository
+   (child of the User Story, `[CR-NNN]` in the title, tag `cr-nnn`) and one comment
+   on the User Story with the CR summary and gate date. Read each back. Record the
+   ids in the CR. Do not close or reopen existing Tasks; comment on a superseded
+   one with a link to the CR. A change large enough to be a different capability
+   is a new User Story: propose it, the user decides.
+9. Hand off to the `admiral`.
+
+Never treat a question, silence or a partial edit request as approval. On
+rejection, record why in the CR and return to the same gate.
+
+---
+
 # Existing feature restoration
 
 For an existing feature, do not assume its original plan still represents
@@ -367,6 +442,19 @@ They control different things and both are required: the first names the
 branch, the second names the spec directory. Without the first,
 `/speckit.specify` auto-creates a sequentially numbered branch and breaks the
 cross-repository convention. See `protocols/feature-branching.md`.
+
+Spec Kit resolves the repository from the **current working directory**, not
+from the path of the script it runs. Before any `/speckit.*` command, set and
+prove it:
+
+```bash
+cd /root/soarplus-dev-orchestration
+./.specify/scripts/bash/check-prerequisites.sh --paths-only
+```
+
+`REPO_ROOT` must be `/root/soarplus-dev-orchestration`. If it names a product
+repository, stop: you are about to write global planning artifacts into
+somebody else's repository.
 
 Do not invent or silently substitute work-item identifiers.
 

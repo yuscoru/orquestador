@@ -30,7 +30,7 @@ stable, safe REST contract published by `soarplus-api`.**
 
 | In scope (phase 1) | Out of scope (later) |
 |---|---|
-| Contract and API implementation in `soarplus-api`: target catalog, paginated history per target, detail of one evaluation | Portal view (`soarplus-frontend-app1`) |
+| Contract and API implementation in `soarplus-api`: target catalog, per-target history (last-5, CR-001), all-targets history, detail of one evaluation | Portal view (`soarplus-frontend-app1`) |
 | Access control and data-exposure rules for that contract | `cassdk` client update (repo not present in this environment; impact assessment still required) |
 | Impact assessment on `cassdk` and the frontend | Automatic comparison between periods, alerts, explanation of differences between periods |
 | | Changes to the evaluator or to the persisted document (`soarplus-agentics`) |
@@ -64,15 +64,17 @@ summary, and targets that are not valid series points do not distort it.
 1. **Given** evaluations exist for agents and playbooks, **When** the catalog is requested, **Then**
    every target with at least one valid evaluation appears exactly once with its type, name,
    evaluation profile and last-measurement timestamp and status.
-2. **Given** a target whose only documents are rescores, validation runs or runs whose judge was
-   unavailable, **When** the catalog is requested, **Then** that target does not appear as having a
-   measured history.
+2. **Given** a target whose scored point has monitoring status `judge_unavailable`, **When** the
+   catalog is requested, **Then** that target appears and its latest status is preserved so the
+   consumer can identify it as degraded. *(amended by CR-004; delta approved 2026-10-22)*
 3. **Given** the consumer filters by target type or by orchestrator profile, **When** the catalog is
    requested, **Then** only matching targets are returned.
 
 ---
 
 ### User Story 2 - See how the two quality metrics evolve for a target (Priority: P1)
+
+*(amended by CR-001: last-5 scored points, no paging, type-less URL)*
 
 A consumer asks for the history of one target and receives a time-ordered, paginated series. Each
 point carries the two headline metrics, the sample size behind them, the measurement status, the
@@ -81,22 +83,21 @@ how quality is measured is visible next to a change in quality.
 
 **Why this priority**: This is the core of the feature — the evolution view.
 
-**Independent Test**: Request the history of a seeded target; points arrive ordered by evaluation
-time, paginated, each with both metrics (or an explicit absence), `n`, status, period and evaluator
-context; no point comes from a rescore, a validation run or an uncommitted window.
+**Independent Test**: Request the history of a seeded target; at most the 5 most recent scored
+points arrive ordered by evaluation time descending, each with both metrics, `n`, status, period
+and evaluator context; no point without both metric scores appears.
 
 **Acceptance Scenarios**:
 
-1. **Given** a target with many valid evaluations, **When** the history is requested with a page
-   size, **Then** a bounded page is returned in a defined order together with what is needed to fetch
-   the next page.
-2. **Given** a point where a metric has no score, **When** it is returned, **Then** the metric is
-   explicitly absent (not `0`), and the status says why the point has no metrics.
+1. **Given** a target with many scored evaluations, **When** the history is requested, **Then** at
+   most the 5 most recent points are returned in descending evaluation-time order.
+2. **Given** a point where a metric has no score, **When** histories are computed, **Then** that
+   point is excluded (FR-004); every returned point carries both metric values.
 3. **Given** two consecutive points with different evaluator profile version or judge model,
    **When** they are returned, **Then** the difference is observable from the point data alone.
-4. **Given** a point whose status is low sample, no activity, no eligible cases or incomplete
-   evidence, **When** it is returned, **Then** the consumer can distinguish it from a normal
-   measurement without interpreting free text.
+4. **Given** a point whose status is low sample, no activity, no eligible cases, incomplete
+   evidence or judge unavailable, **When** it is returned, **Then** the consumer can distinguish it
+   from a normal measurement without interpreting free text. *(amended by CR-004; delta approved 2026-10-22)*
 5. **Given** a target name that does not exist, **When** the history is requested, **Then** the
    consumer receives a defined "not found" or empty result according to the contract.
 
@@ -178,30 +179,41 @@ every other API route.
 
 ### Functional Requirements
 
-- **FR-001**: `soarplus-api` MUST publish a read-only contract with three capabilities: a catalog of
-  evaluated targets, a paginated history per target, and the detail of one evaluation. It MUST NOT
+- **FR-001** *(amended by CR-001)*: `soarplus-api` MUST publish a read-only contract with four
+  capabilities: a catalog of evaluated targets, a per-target history, an all-targets history, and
+  the detail of one evaluation. It MUST NOT
   write to `agent_eval_results`.
-- **FR-002**: A target MUST be identified in the contract by the pair `(target_type, target)`, using
+- **FR-002** *(amended by CR-001)*: A target MUST be identified in persistence and in catalog items by the pair
+  `(target_type, target)`, using
   the values persisted by the evaluator. `target_type` MUST be limited to the persisted values
-  (`agent`, `playbook`). The API MUST NOT invent a third `target_type`.
+  (`agent`, `playbook`). The API MUST NOT invent a third `target_type`. The per-target history
+  route addresses a target by `target` alone (cross-type name uniqueness asserted by the user,
+  CR-001); if documents of more than one `target_type` match, the route MUST answer 409 instead of
+  mixing series.
 - **FR-003**: The contract MUST let a consumer select agents, playbooks and orchestrators.
   Orchestrators MUST be selectable through the persisted evaluation profile. *(How the three groups
   are expressed in the contract is a Gate-2 design decision.)*
-- **FR-004**: The history and the catalog MUST include only valid series points: schema version 4,
-  offline-log mode, committed measurement window, and not a rescore nor a historical-persistence
-  validation. Anything else MUST be excluded or rejected consistently.
-- **FR-005**: Each history point MUST expose: evaluation timestamp; evaluated period (from/to);
-  the two metrics `hallucinations_v1` and `rubric_based_final_response_quality_v1` on a 0–1 scale,
-  with explicit absence when not scored; the sample size per metric and for the window; measurement
+- **FR-004** *(amended by CR-001)*: The histories and the catalog MUST include only scored series
+  points: schema version 4, offline-log mode, and both headline metrics carrying a score. The
+  previous committed-window / status / rescore / validation conditions no longer restrict
+  inclusion. The predicate MUST stay defined once and shared by every route of this contract.
+- **FR-005** *(amended by CR-001)*: Each history point MUST expose: evaluation timestamp; evaluated period (from/to);
+  the two metrics `hallucinations_v1` and `rubric_based_final_response_quality_v1` on a 0–1 scale
+  (both always scored — unscored points are excluded by FR-004); the sample size per metric and for the window; measurement
   status; evaluation profile, profile version and judge model.
 - **FR-006**: The contract MUST convey, for each metric, its scale and polarity so consumers cannot
   misread a high `hallucinations_v1` as bad. `hallucinations_v1` MUST be presented to users as
   «Fidelidad a la evidencia». The contract MUST also carry enough information for a consumer to tell
   that a low value may reflect missing evidence rather than hallucination (reason available when the
   evaluator reported the metric as unavailable or evidence as incomplete).
-- **FR-007**: Measurement status MUST be machine-readable and limited to the evaluator's states:
-  measured, low sample, no activity, no eligible cases, evidence incomplete. It MUST NOT require
-  parsing free text.
+- **FR-007** *(amended by CR-002 and CR-004; CR-004 delta approved 2026-10-22)*: Measurement status
+  MUST be machine-readable as `string | null`, not a closed enum. Known writer strings are measured,
+  low sample, no activity, no eligible cases, evidence incomplete and judge unavailable; every future
+  writer string MUST be preserved literally and MUST NOT make a complete list/detail fail. Null is
+  reserved for a persisted document without monitoring status (legacy point). A persisted non-null
+  non-string status MUST be projected as the fixed API sentinel `invalid_status`, with type-only safe
+  server logging and no raw value exposure. Consumers MUST render unknown strings and the sentinel as
+  degraded, never measured/green/zero; null remains "status unknown (legacy point)".
 - **FR-008**: The detail of an evaluation MUST expose: period; per-metric distribution (count, mean,
   standard deviation, standard error, min, max, p10, p50, p90); per-rubric fulfilment rate;
   measurement state; evaluated cases with their per-metric scores; per-case rubric outcomes,
@@ -292,8 +304,8 @@ every other API route.
 
 ### Measurable Outcomes
 
-- **SC-001**: For every evaluated target, a consumer can retrieve its complete valid history by
-  following pages, with no point repeated, omitted or out of order.
+- **SC-001** *(amended by CR-001)*: For every evaluated target, a consumer can retrieve its last 5 scored points in
+  one request, ordered by evaluation time descending, with no point repeated, omitted or out of order.
 - **SC-002**: In 100% of automated checks over responses of all new routes, none of the fields in
   FR-009 appears.
 - **SC-003**: 100% of the new routes deny unauthenticated and unauthorized callers; an administrator
@@ -366,3 +378,23 @@ index ownership, treatment of free-text `unavailable_metrics` reasons.
 | `soarplus-agentics` | no | Provider of the data; unchanged. Source of the document semantics |
 | `soarplus-frontend-app1` | no (this phase) | Future consumer; must not define shapes |
 | `cassdk` | not verifiable | Future downstream consumer; impact assessment required |
+
+## Amendments
+
+- **2026-10-15 (pre-CR protocol)**: C2 withdrawn; FR-011, SC-004, US4 scenario 3 withdrawn (see header note).
+- **CR-004 (2026-10-22, APPROVED)** — replaces the closed status enum
+  with forward-compatible `string|null`: known/future writer strings preserved, legacy-only null,
+  and `invalid_status` for malformed non-string metadata. Previous FR-007 allowed only five non-null
+  statuses; previous US1 scenario 2 wrongly assumed judge-unavailable runs were excluded. CR-001's
+  scored-point predicate admits them, so status metadata cannot make the whole response fail.
+
+- **CR-001 (2026-10-19, status DRAFT, delta gate pending)** — previous wording preserved here:
+  - FR-001: "three capabilities: a catalog…, a paginated history per target, and the detail of one evaluation".
+  - FR-002: "A target MUST be identified in the contract by the pair (target_type, target)…" (no type-less history route, no 409 guard).
+  - FR-004: "only valid series points: schema version 4, offline-log mode, committed measurement window, and not a rescore nor a historical-persistence validation".
+  - FR-005: "…with explicit absence when not scored…".
+  - SC-001: "…can retrieve its complete valid history by following pages…".
+  - US2: paginated history; scenario 1 (page size / next page), scenario 2 (explicit metric absence).
+- **CR-002 (2026-10-19)** — previous wording preserved here:
+  - FR-007: "…limited to the evaluator's states: measured, low sample, no activity, no eligible
+    cases, evidence incomplete. It MUST NOT require parsing free text." (status could not be null).

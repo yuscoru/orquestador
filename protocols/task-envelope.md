@@ -55,6 +55,7 @@ source:
   artifacts: /root/soarplus-dev-orchestration/specs/812-new-capability
 
 assignment:
+  kind: FEATURE
   ado_task: 934
   spec_tasks:
     - T014
@@ -220,6 +221,58 @@ worker's projected `tasks.md` MUST keep them unchanged. Renumbering breaks the
 thread between this field, the repository's tasks and the commit trailer.
 
 The worker MUST NOT opportunistically complete unrelated Spec Kit tasks.
+
+## `assignment.kind`
+
+```yaml
+kind: FEATURE | FIX | CHANGE
+```
+
+Optional; absent means `FEATURE`. `IMPLEMENT` remains the only `mode`: the kind
+says **why** the work exists, not a new way of working. The full process is in
+`change-and-issue.md`.
+
+| Kind | Why | Required fields | `spec_tasks` |
+|---|---|---|---|
+| `FEATURE` | Approved plan | as above | the feature's task ids |
+| `FIX` | Implementation does not meet the approved spec | `issue_ref`, `ado_bug`, `reproduction`, `expected` | empty |
+| `CHANGE` | Approved Change Request | `change_ref`, `ado_task` of the CR Task | the CR's new ids |
+
+```yaml
+assignment:
+  kind: FIX
+  issue_ref: issues/ISS-001.md        # relative to source.artifacts
+  ado_bug: 1234
+  ado_task: null
+  spec_tasks: []
+  reproduction: >
+    Steps or evidence that show the defect, without credentials or user data.
+  expected: >
+    Behaviour the spec requires, citing the requirement (e.g. FR-004).
+```
+
+```yaml
+assignment:
+  kind: CHANGE
+  change_ref: changes/CR-001.md       # relative to source.artifacts
+  ado_task: 1301
+  spec_tasks: [T027, T028]
+```
+
+Rules by kind:
+
+- `FIX` MUST include a regression test as an acceptance criterion: red before the
+  fix, green after. It MUST NOT change a cross-repository contract or amend the
+  spec. If the fix needs to, stop and return `SPEC_INCONSISTENCY` or
+  `CONTRACT_CHANGE_REQUIRED`.
+- `CHANGE` is accepted only if `change_ref` exists and carries the delta-gate
+  record. A CR still in `DRAFT` is rejected with `AUTHORIZATION_REQUIRED`. The
+  worker re-projects **only the delta** into its local `spec.md`, `plan.md` and
+  `tasks.md`, keeping finished work and original ids.
+- `FIX` and `CHANGE` use the commit trailer defined in `change-and-issue.md`:
+  `Refs: #<US> #<bugId>` or `Refs: #<US> #<taskId>`.
+- The branch is the feature branch while the feature is unmerged. The worker
+  never invents another.
 
 ---
 

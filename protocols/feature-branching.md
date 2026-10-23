@@ -170,6 +170,17 @@ orchestration defect. Return the blocker rather than normalizing it silently.
 
 ---
 
+# Fixes and change requests
+
+A `FIX` or `CHANGE` envelope (`change-and-issue.md`) uses the feature branch,
+unchanged, while the feature is unmerged. Nothing here changes.
+
+If the feature branch has already been merged, the `admiral` stops and asks the
+user which branch to use. This protocol deliberately defines no second naming
+scheme.
+
+---
+
 # Spec directory binding
 
 Spec Kit resolves the active feature directory in this priority order:

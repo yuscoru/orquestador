@@ -6,6 +6,18 @@ References only. A contract has exactly one authoritative source; nothing here d
 
 ## C-01 quality-read-api
 
+*(amended by CR-001, DRAFT: surface R1–R6; R2 becomes `GET /quality/targets/{target}/evaluations`
+with last-5 scored points and 409 collision guard; new R6 `GET /quality/targets/history`;
+scored-point predicate replaces the valid-point predicate — see plan.md §3 and changes/CR-001.md)*
+
+*(amended by CR-002: `EvaluationPoint.status` and `sample_sufficient` are nullable — null for legacy
+documents without the monitoring block; see changes/CR-002.md)*
+
+*(amended by CR-004; revised delta approved 2026-10-22: change `EvaluationPoint.status` from a closed enum to
+nullable open string. R1/R2/R3/R6 preserve known/future writer strings; null remains legacy-only;
+malformed non-string metadata becomes API sentinel `invalid_status` with safe type-only logging.
+Consumers need known branches plus a generic degraded default.)*
+
 ```yaml
 name: quality-read-api
 type: REST
@@ -18,8 +30,11 @@ authoritative_source: >
   soarplus-api (/api/v1/openapi.json) from the response models in api/utils/models.py in
   soarplus-api. From that moment plan.md §3 is superseded.
 compatibility: >
-  New, additive. No existing route changes shape. Metric ids and statuses are stable; new metrics are
-  added as new properties.
+  Amended by CR-001 before any consumer exists: R2 URL and semantics change (breaking versus the
+  unreleased previous shape), R6 added. CR-004 proposes changing status from enum-or-null to
+  string-or-null; existing JSON values remain compatible but exhaustive/generated consumers must
+  add a default branch. No existing route outside this feature changes shape. Metric ids are stable;
+  new metrics are added as new properties.
 ```
 
 ## C-02 quality-view-capability
@@ -47,7 +62,8 @@ authoritative_source: tools/sre-response-quality/sre_eval/agent_eval_result.py i
 compatibility: >
   Read-only for this feature. Several legacy document kinds coexist in the collection; the API reads
   only the valid-point kind defined in plan.md §3. The writer's model forbids extra fields, so
-  allow-list projection is mandatory.
+  allow-list projection is mandatory. The writer-supported monitoring status `judge_unavailable`
+  is observed and covered by CR-004; the writer schema itself is unchanged.
 ```
 
 ## C-04 debug-collection-read-routes (withdrawn)

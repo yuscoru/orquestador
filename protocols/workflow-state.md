@@ -75,6 +75,8 @@ specs/<ADO-US>-<slug>/
     log.md                  admiral    append-only chronological record
     envelopes/              admiral    issued Task Envelopes
     results/                admiral    received Task Results and Blocker Results
+    changes/CR-NNN.md       captain    Change Requests (see change-and-issue.md)
+    issues/ISS-NNN.md       admiral    findings, triage outcomes and routing
 ```
 
 `spec.md`, `plan.md` and `tasks.md` here are **global**: they describe the
@@ -326,12 +328,19 @@ Two roles write to this repository. Ownership prevents collision.
 | `specs/*/log.md` | `admiral` | everyone |
 | `specs/*/envelopes/**` | `admiral` | everyone |
 | `specs/*/results/**` | `admiral` | everyone |
+| `specs/*/changes/**` | `captain` | everyone |
+| `specs/*/issues/**` | `admiral` | everyone |
 
 The `captain` MUST NOT write execution state.
 
 The `admiral` MUST NOT rewrite planning artifacts. When a plan is wrong, the
 `admiral` routes the correction back to the `captain` rather than editing
-`plan.md` directly.
+`plan.md` directly. The route is a Change Request, defined in
+`change-and-issue.md`; the `captain` amends the artifacts in place, behind the
+delta gate, and the `admiral` records it under `open_changes`.
+
+The `captain` still writes no execution state: a Change Request records what
+changes in the plan, never what was assigned or returned.
 
 Repository workers never write here. They write to their own repository and
 return a protocol response; the `admiral` persists it.
@@ -365,6 +374,16 @@ repositories:
 active_blockers:
   - results/2026-10-13-api-engineer-941-blocker.md
 
+open_changes:                 # Change Requests not yet CLOSED
+  - id: CR-001
+    status: DRAFT             # DRAFT | APPROVED | APPLIED
+    file: changes/CR-001.md
+
+open_issues:                  # Issues not yet RESOLVED or closed
+  - id: ISS-001
+    status: TRIAGED
+    file: issues/ISS-001.md
+
 pending_next_actions:
   - Await CAS account, capability and Secret provisioning.
 
@@ -375,7 +394,9 @@ delivery_authorizations_granted:
 
 Rules:
 
-- `phase` uses the orchestration state model defined in the `admiral` agent;
+- `phase` uses the orchestration state model defined in the `admiral` agent,
+  including `CHANGE_PENDING` and `REOPENED`;
+- `open_changes` and `open_issues` are omitted when empty;
 - every repository listed MUST name a registered worker;
 - `implementation_reality` is a **path reference** into the product repository,
   never a copy of its content;
@@ -460,6 +481,8 @@ envelope issued      -> write envelope file + log entry
 result received      -> write result file + log entry + update WORKFLOW-STATE
 blocker routed       -> log entry + update WORKFLOW-STATE
 authorization given  -> update WORKFLOW-STATE
+issue opened/triaged -> write issues/ISS-NNN.md + log entry + update WORKFLOW-STATE
+CR drafted/approved  -> log entry + update WORKFLOW-STATE (the CR file is the captain's)
 ```
 
 A session that persists only on completion loses everything when it is

@@ -1,0 +1,11 @@
+# Final read-only result — task 8b1898e4-95a6-42ac-9da5-551af6ad31c4
+
+Source: `agentics@soarplus`, ASK `696-agentics-17`; runtime PID 47862 on coherent OTEL 1.38 venv; repo commit `5e720a3ebb2ebc766943e4dc45ca1af4b43c9b1f`, pre-existing dirty tree unchanged.
+
+Task terminal `completed` at `2026-10-22T13:05:04.739650Z`, start `13:02:25.374770Z`, reported duration 155.792s. Target `mermaid-chart-designer-agent`; eval_run_id `979d2ac7e6ea415fa68597ca76da5654`. Tracking terminated with `target_finished` sequence 123: 124 records, 10/10 cases, 25/25 LLM calls, zero failures and zero calls without usage; persistence started/finished 1/1.
+
+Selection: scan 37 of limit 1000, sample 5 of limit 5, 32 unsampled, zero oversized/extraction failure/incomplete evidence. Scores: hallucinations_v1 0.975 and rubric_based_final_response_quality_v1 0.96, each n=5; thresholds 0.8/0.7; no unavailable metrics/security violations/unevaluated cases. Persisted summary passed true. Task-level monitoring semantics separately report comparison deferred, verdict_possible false and passed null; do not conflate that comparison verdict with the persisted threshold summary.
+
+Result document persisted at `2026-10-22T13:05:04Z`; monitoring measured/sample sufficient; checkpoint_committed true. Persisted accounting path `adk_events`, model_attribution `task_model`, coverage `received_usage_only`; usage coverage `partial_adk_responses`; observed judge model `gemini-3.1-pro-preview`; provider absent and not inferred. Tokens: prompt 171,223; completion 101,656; reasoning 63,005; cached 66,186; total 272,879. Task metadata contains 25 token_usage_details with exact matching sums and `usage_recorded=true`; no token discrepancy. Money/currency/pricing_source remain null and no provider-cost claim is made.
+
+SystemDevAgent PID 47862 remained alive/listening with no former import failure. ISS-006 boundary and standard in-process ADK accounting criterion are proven for this run. Admiral independently verified the PID/listener and read the persisted evaluation via the local read-only Quality API: status measured, sample sufficient, case_count 5, evaluated_at 13:05:04Z and both exact metric values. No mutation/retry/restart occurred during verification.

@@ -156,6 +156,7 @@ types whenever possible.
 ```text
 CONTRACT_CHANGE_REQUIRED
 CONTRACT_MISMATCH
+SPEC_INCONSISTENCY
 DEPENDENCY_NOT_READY
 WORKER_MISMATCH
 REPOSITORY_MISMATCH
@@ -230,6 +231,35 @@ This differs from `CONTRACT_CHANGE_REQUIRED`.
 `CONTRACT_MISMATCH` means an inconsistency already exists.
 
 `CONTRACT_CHANGE_REQUIRED` means a new change is needed to satisfy the feature.
+
+---
+
+## `SPEC_INCONSISTENCY`
+
+Use when the approved specification, plan or tasks contradict each other, a
+contract, or the observed code, and the assignment cannot be completed without
+choosing which one is right.
+
+Example:
+
+```text
+spec.md FR-004 requires every evaluation of a target to be listed, while
+contracts.md C-01 defines the catalog as valid measurement points only.
+```
+
+It also applies when a `FIX` turns out to require changing the spec or a
+contract.
+
+The worker MUST cite both sides of the inconsistency, by path and requirement id.
+It MUST NOT pick one and implement it.
+
+Typical owner:
+
+```text
+captain
+```
+
+who opens or amends a Change Request. See `change-and-issue.md`.
 
 ---
 

@@ -170,6 +170,42 @@ warnings: []
 
 ---
 
+# FIX and CHANGE results
+
+A result for an envelope with `assignment.kind` of `FIX` or `CHANGE` carries one
+extra block. Everything else is unchanged.
+
+```yaml
+assignment:
+  kind: FIX                      # echoed exactly as received
+  issue_ref: issues/ISS-001.md
+  ado_bug: 1234
+
+regression:
+  test: tests/test_xxx.py::TestYyy::test_zzz
+  red_before_fix: PASS           # PASS | NOT_VERIFIED, with how it was observed
+  green_after_fix: PASS
+  evidence: >
+    Failed with <message> against the unfixed code; passes now.
+```
+
+For `CHANGE`, `regression` is replaced by:
+
+```yaml
+delta_projection:
+  local_artifacts_updated: [spec.md, plan.md, tasks.md]
+  superseded_tasks_marked: [T012]
+  new_tasks_completed: [T027, T028]
+```
+
+`red_before_fix` is `NOT_VERIFIED` when the test was written after the fix; say so.
+A fix without a regression test is not `COMPLETED`.
+
+The `ado` block reports the Bug or CR Task that was actually updated, confirmed
+by read-back. Engineers do not create work items.
+
+---
+
 # Traceability
 
 The result MUST preserve the identifiers from the Task Envelope:
